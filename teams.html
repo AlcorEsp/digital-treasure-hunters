@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Equipos - Digital Treasure Hunters</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="teams.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Gestión de Equipos</h1>
+      <button id="back-btn" class="back-btn">⬅️ Volver</button>
+    </header>
+
+    <main>
+      <section id="current-team-panel" class="panel">
+        <h2>Tu Equipo Actual</h2>
+        <div id="current-team" class="loading">
+          <p>Cargando información del equipo...</p>
+        </div>
+      </section>
+      
+      <section id="team-members-panel" class="panel">
+        <h2>Miembros del Equipo</h2>
+        <div id="team-members" class="loading">
+          <p>Cargando miembros...</p>
+        </div>
+      </section>
+      
+      <section id="available-teams-panel" class="panel">
+        <h2>Equipos Disponibles</h2>
+        <div id="available-teams" class="loading">
+          <p>Cargando equipos disponibles...</p>
+        </div>
+      </section>
+      
+      <section id="create-team-panel" class="panel">
+        <h2>Crear Nuevo Equipo</h2>
+        <form id="create-team-form">
+          <div class="form-group">
+            <label for="team-name">Nombre del Equipo:</label>
+            <input type="text" id="team-name" placeholder="Escribe un nombre para tu equipo" required>
+          </div>
+          <div class="form-group">
+            <label for="team-description">Descripción:</label>
+            <textarea id="team-description" placeholder="Describe el propósito de tu equipo" rows="3"></textarea>
+          </div>
+          <button type="submit" class="primary-btn">Crear Equipo</button>
+        </form>
+      </section>
+      
+      <section id="pending-invitations-panel" class="panel">
+        <h2>Invitaciones Pendientes</h2>
+        <div id="pending-invitations">
+          <p class="no-invitations">No tienes invitaciones pendientes.</p>
+        </div>
+      </section>
+    </main>
+    
+    <footer>
+      <button id="invite-btn" class="primary-btn">Invitar Miembros</button>
+      <button id="share-clues-btn" class="secondary-btn">Compartir Pistas</button>
+    </footer>
+  </div>
+  
+  <!-- Modal para invitar miembros -->
+  <div id="invite-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Invitar Miembros</h2>
+      <p>Comparte este código con otros jugadores para invitarlos a tu equipo:</p>
+      <div class="invite-code-container">
+        <input type="text" id="invite-code" readonly>
+        <button id="copy-invite-code" class="secondary-btn">Copiar</button>
+      </div>
+      <p class="small">O introduce el código de invitación que recibiste:</p>
+      <div class="join-code-container">
+        <input type="text" id="join-code" placeholder="Código de invitación">
+        <button id="join-team-btn" class="primary-btn">Unirse</button>
+      </div>
+      <button id="close-invite-modal" class="close-modal">Cerrar</button>
+    </div>
+  </div>
+  
+  <script src="teams.js"></script>
+  <script src="teams-ui.js"></script>
+</body>
+</html>

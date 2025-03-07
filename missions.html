@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Misiones - Digital Treasure Hunters</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="missions.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Misiones</h1>
+      <button id="back-btn" class="back-btn">⬅️ Volver</button>
+    </header>
+
+    <main>
+      <section id="current-mission-panel" class="panel">
+        <h2>Misión Actual</h2>
+        <div id="current-mission" class="loading">
+          <p>Cargando misión actual...</p>
+        </div>
+      </section>
+      
+      <section id="mission-objectives-panel" class="panel">
+        <h2>Objetivos</h2>
+        <div id="mission-objectives" class="loading">
+          <p>Cargando objetivos...</p>
+        </div>
+      </section>
+      
+      <section id="available-missions-panel" class="panel">
+        <h2>Próximas Misiones</h2>
+        <div id="available-missions" class="loading">
+          <p>Cargando misiones disponibles...</p>
+        </div>
+      </section>
+      
+      <section id="completed-missions-panel" class="panel">
+        <h2>Misiones Completadas</h2>
+        <div id="completed-missions" class="loading">
+          <p>Cargando historial de misiones...</p>
+        </div>
+      </section>
+    </main>
+    
+    <footer>
+      <button id="refresh-btn" class="primary-btn">Actualizar Progreso</button>
+      <button id="abandon-mission-btn" class="secondary-btn">Abandonar Misión</button>
+    </footer>
+  </div>
+  
+  <!-- Modal con detalles de la misión -->
+  <div id="mission-details-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="modal-mission-title">Título de la Misión</h2>
+      <div id="modal-mission-content">
+        <p id="modal-mission-description">Descripción detallada de la misión, sus objetivos y recompensas.</p>
+        
+        <div class="mission-details-section">
+          <h3>Objetivos</h3>
+          <ul id="modal-mission-objectives">
+            <!-- Los objetivos se cargarán dinámicamente -->
+          </ul>
+        </div>
+        
+        <div class="mission-details-section">
+          <h3>Recompensas</h3>
+          <ul id="modal-mission-rewards">
+            <!-- Las recompensas se cargarán dinámicamente -->
+          </ul>
+        </div>
+        
+        <div class="mission-details-section">
+          <h3>Requisitos</h3>
+          <ul id="modal-mission-requirements">
+            <!-- Los requisitos se cargarán dinámicamente -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="close-details-modal" class="secondary-btn">Cerrar</button>
+        <button id="accept-mission-btn" class="primary-btn">Aceptar Misión</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="missions.js"></script>
+  <script src="missions-ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Preguntas y Discusiones
+    url: https://github.com/tu-usuario/digital-treasure-hunters/discussions
+    about: Por favor haz preguntas generales y discute ideas aquí.
+  - name: Comunidad de Discord
+    url: https://discord.gg/tu-servidor
+    about: Únete a nuestra comunidad para charlar y discutir en tiempo real.

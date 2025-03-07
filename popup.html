@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Treasure Hunters</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="popup-detached.css" id="detached-styles" disabled>
+  <script src="popup-init.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Digital Treasure Hunters</h1>
+      <div id="user-info">
+        <!-- Info del jugador se cargará aquí -->
+      </div>
+      <button id="close-window-btn" class="close-window-btn" style="display: none;">✕</button>
+    </header>
+
+    <main>
+      <section id="mission-panel" class="panel">
+        <h2>Misión Actual <a href="#" class="section-link" id="view-all-missions">Ver todas</a></h2>
+        <div id="current-mission">
+          <!-- Detalles de la misión actual -->
+          <p class="loading">Cargando misión...</p>
+        </div>
+      </section>
+
+      <section id="team-panel" class="panel">
+        <h2>Tu Equipo <a href="#" class="section-link" id="manage-teams">Gestionar</a></h2>
+        <div id="team-members">
+          <!-- Miembros del equipo se cargarán aquí -->
+          <p class="loading">Cargando equipo...</p>
+        </div>
+      </section>
+
+      <section id="clues-panel" class="panel">
+        <h2>Pistas Descubiertas <span id="clue-count" class="count-badge">0</span></h2>
+        <div id="discovered-clues">
+          <!-- Pistas descubiertas se cargarán aquí -->
+          <p class="no-clues">Aún no se han encontrado pistas.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <button id="scan-page" class="primary-btn">Escanear esta página</button>
+      <button id="settings-btn" class="secondary-btn">Ajustes</button>
+      <button id="detach-btn" class="detach-btn" title="Mantener abierto">📌</button>
+    </footer>
+  </div>
+  
+  <div id="role-selection" class="modal hidden">
+    <div class="modal-content">
+      <h2>Selecciona tu Rol</h2>
+      <div class="roles-container">
+        <div class="role-card" data-role="decoder">
+          <div class="role-icon">🔎</div>
+          <h3>Decodificador</h3>
+          <p>Especialista en descifrar códigos y mensajes ocultos</p>
+        </div>
+        <div class="role-card" data-role="translator">
+          <div class="role-icon">🌐</div>
+          <h3>Traductor</h3>
+          <p>Experto en idiomas y símbolos extraños</p>
+        </div>
+        <div class="role-card" data-role="visual-analyst">
+          <div class="role-icon">👁️</div>
+          <h3>Analista Visual</h3>
+          <p>Detecta patrones y detalles ocultos en imágenes</p>
+        </div>
+        <div class="role-card" data-role="historian">
+          <div class="role-icon">📚</div>
+          <h3>Historiador</h3>
+          <p>Conoce la historia de sitios web y referencias culturales</p>
+        </div>
+        <div class="role-card" data-role="navigator">
+          <div class="role-icon">🧭</div>
+          <h3>Navegador</h3>
+          <p>Detecta patrones de navegación y ubica sitios de interés</p>
+        </div>
+      </div>
+      <button id="confirm-role" class="primary-btn">Confirmar</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

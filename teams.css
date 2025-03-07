@@ -1,0 +1,288 @@
+/* Estilos para la página de gestión de equipos */
+
+/* Ajustes generales */
+body {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+header h1 {
+  color: white;
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: var(--border-radius);
+  transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+footer {
+  padding: 15px 20px;
+  background-color: var(--background-color);
+  border-top: 1px solid #ddd;
+}
+
+/* Estilos para las tarjetas de equipo */
+.team-card {
+  background-color: white;
+  border-radius: var(--border-radius);
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: var(--box-shadow);
+  transition: transform 0.2s;
+}
+
+.team-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.team-card h3 {
+  margin-top: 0;
+  color: var(--primary-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.team-card p {
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.team-card .team-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #888;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.team-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.current-team-badge {
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+/* Estilos para la lista de miembros */
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  padding: 10px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 12px;
+}
+
+.member-info {
+  flex: 1;
+}
+
+.member-name {
+  font-weight: bold;
+  color: var(--secondary-color);
+}
+
+.member-role {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.member-status {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+.leader-badge {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.online-badge {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.offline-badge {
+  background-color: #9e9e9e;
+  color: white;
+}
+
+/* Estilos para el formulario de creación de equipo */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: var(--secondary-color);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(60, 110, 113, 0.2);
+}
+
+/* Estilos para modal de invitación */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: var(--border-radius);
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.invite-code-container,
+.join-code-container {
+  display: flex;
+  margin: 15px 0;
+}
+
+.invite-code-container input,
+.join-code-container input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius) 0 0 var(--border-radius);
+  font-family: monospace;
+  font-size: 1rem;
+}
+
+.invite-code-container button,
+.join-code-container button {
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #888;
+}
+
+.small {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 20px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Indicadores de carga y estados vacíos */
+.loading {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 20px;
+}
+
+.no-team,
+.no-members,
+.no-invitations {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  border: 1px dashed #ddd;
+  border-radius: var(--border-radius);
+  margin: 10px 0;
+}

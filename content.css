@@ -1,0 +1,195 @@
+/* Estilos para elementos del juego inyectados en las páginas web */
+
+/* Indicador de pista potencial */
+.dth-clue-indicator {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #3c6e71;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  z-index: 9999;
+  transition: transform 0.3s ease;
+}
+
+.dth-clue-indicator:hover {
+  transform: scale(1.1);
+}
+
+.dth-clue-indicator::after {
+  content: "🔍";
+  font-size: 22px;
+}
+
+/* Marcador de elemento que contiene una pista */
+.dth-clue-element {
+  position: relative;
+}
+
+.dth-clue-element::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  outline: 2px dashed rgba(60, 110, 113, 0.7);
+  pointer-events: none;
+  animation: dth-pulse 2s infinite;
+}
+
+@keyframes dth-pulse {
+  0% {
+    outline-color: rgba(60, 110, 113, 0.3);
+  }
+  50% {
+    outline-color: rgba(60, 110, 113, 0.7);
+  }
+  100% {
+    outline-color: rgba(60, 110, 113, 0.3);
+  }
+}
+
+/* Tooltips para las pistas */
+.dth-tooltip {
+  position: absolute;
+  background-color: #fff;
+  border: 2px solid #3c6e71;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  color: #333;
+  max-width: 300px;
+  z-index: 10000;
+}
+
+.dth-tooltip-header {
+  font-weight: bold;
+  color: #3c6e71;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.dth-tooltip-content {
+  line-height: 1.5;
+}
+
+.dth-tooltip-footer {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Efecto de resaltado para texto encriptado */
+.dth-encrypted-text {
+  background-color: rgba(217, 194, 173, 0.2);
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  text-decoration: underline dotted #3c6e71;
+}
+
+.dth-encrypted-text:hover {
+  background-color: rgba(217, 194, 173, 0.4);
+}
+
+/* Marcador para imágenes con pistas ocultas */
+.dth-image-clue {
+  position: relative;
+}
+
+.dth-image-clue::after {
+  content: "👁️";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+/* Panel de información de misión */
+.dth-mission-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  z-index: 9998;
+  overflow: hidden;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform-origin: top right;
+}
+
+.dth-mission-panel.dth-hidden {
+  transform: scale(0.95);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dth-mission-header {
+  background-color: #3c6e71;
+  color: white;
+  padding: 12px 15px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dth-mission-header button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.dth-mission-content {
+  padding: 15px;
+}
+
+.dth-mission-progress {
+  margin-top: 12px;
+}
+
+.dth-progress-bar {
+  height: 8px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.dth-progress {
+  height: 100%;
+  background-color: #3c6e71;
+  width: 0%;
+  transition: width 0.5s ease;
+}
+
+.dth-progress-text {
+  font-size: 12px;
+  color: #666;
+  text-align: right;
+}
