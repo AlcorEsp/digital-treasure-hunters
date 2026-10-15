@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Treasure Hunters — Multijugador por Salas y Equipos</title>
+  <style>
+    :root {
+      --primary: #3c6e71;
+      --primary-light: #52969a;
+      --secondary: #284b63;
+      --accent: #d9c2ad;
+      --danger: #e63946;
+      --success: #2a9d8f;
+      --bg-dark: #0b131b;
+      --bg-panel: #152331;
+      --bg-card: #1e3144;
+      --text-light: #f2f5f7;
+      --text-muted: #9fb3c8;
+      --radius: 12px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* CABECERA Y MARCADOR GLOBAL */
+    .top-bar {
+      background: linear-gradient(135deg, #132535 0%, #204056 100%);
+      border-bottom: 3px solid var(--accent);
+      padding: 14px 22px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      font-size: 1.35rem;
+      color: #fff;
+    }
+
+    .brand span {
+      font-size: 0.8rem;
+      color: var(--accent);
+      display: block;
+    }
+
+    /* BARRA DE SALA / PARTIDA */
+    .room-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.35);
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(217, 194, 173, 0.3);
+    }
+
+    .room-box input {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      border-radius: 6px;
+      width: 115px;
+      font-size: 0.88rem;
+    }
+
+    .mini-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 6px 11px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .mini-btn:hover {
+      background: var(--primary-light);
+    }
+
+    /* MARCADOR ALPHA VS BETA */
+    .scoreboard {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 6px 14px;
+      border-radius: 50px;
+      border: 1px solid rgba(217, 194, 173, 0.35);
+    }
+
+    .team-btn {
+      background: transparent;
+      border: 2px solid transparent;
+      color: var(--text-muted);
+      padding: 5px 14px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .team-btn.active.alpha {
+      background: var(--danger);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(230, 57, 70, 0.5);
+    }
+
+    .team-btn.active.beta {
+      background: var(--success);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(42, 157, 143, 0.5);
+    }
+
+    .score-num {
+      background: rgba(0,0,0,0.35);
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    /* PERFIL, ROLES ASIGNADOS Y MIEMBROS DEL EQUIPO */
+    .player-bar {
+      background: #101c26;
+      padding: 12px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .player-name-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .player-name-box input {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      width: 140px;
+    }
+
+    .roles-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .role-pill {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text-muted);
+      padding: 5px 11px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .role-pill.preferred {
+      background: var(--primary);
+      color: #fff;
+      border-color: #fff;
+      font-weight: 700;
+    }
+
+    .role-pill.assigned-extra {
+      background: rgba(244, 162, 97, 0.22);
+      color: #f4a261;
+      border-color: #f4a261;
+      font-weight: 600;
+    }
+
+    /* BANNER DE REPARTO DE ROLES DEL EQUIPO */
+    .squad-banner {
+      background: rgba(30, 49, 68, 0.75);
+      border-bottom: 1px solid rgba(217, 194, 173, 0.2);
+      padding: 9px 22px;
+      font-size: 0.84rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .squad-members-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .member-chip {
+      background: var(--bg-dark);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 3px 10px;
+      border-radius: 16px;
+      font-size: 0.78rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .member-chip.me {
+      border-color: var(--accent);
+      background: rgba(217, 194, 173, 0.14);
+    }
+
+    /* LAYOUT PRINCIPAL DE 3 COLUMNAS (RETOS + MESA + CHAT/VOZ DE EQUIPO) */
+    .container {
+      max-width: 1420px;
+      margin: 0 auto;
+      padding: 18px 20px;
+    }
+
+    .tabs-nav {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 18px;
+      background: var(--bg-panel);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-size: 0.96rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--secondary);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 370px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 820px) {
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid rgba(217, 194, 173, 0.2);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+    }
+
+    .panel h2 {
+      color: var(--accent);
+      font-size: 1.15rem;
+      margin-bottom: 6px;
+    }
+
+    .panel p.sub {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 14px;
+    }
+
+    /* IMAGEN Y COORDENADAS */
+    .dropzone {
+      border: 2px dashed var(--primary-light);
+      background: rgba(15, 25, 34, 0.6);
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .image-stage {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      margin-top: 8px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,0.2);
+      cursor: crosshair;
+    }
+
+    .image-stage img {
+      width: 100%;
+      display: block;
+      max-height: 330px;
+      object-fit: contain;
+      background: #091016;
+    }
+
+    .target-pin {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      background: rgba(230, 57, 70, 0.8);
+      box-shadow: 0 0 12px #e63946;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    .target-pin.verify-pin {
+      background: rgba(42, 157, 143, 0.85);
+      box-shadow: 0 0 12px #2a9d8f;
+    }
+
+    /* FORMULARIOS Y BOTONES */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 9px 11px;
+      background: var(--bg-dark);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-danger { background: var(--danger); color: #fff; width: 100%; }
+    .btn-success { background: var(--success); color: #fff; width: 100%; }
+
+    /* TARJETAS DE PISTAS */
+    .clue-card {
+      background: var(--bg-card);
+      border-left: 4px solid var(--primary-light);
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 0.88rem;
+    }
+
+    .clue-card.my-role {
+      border-left-color: #f4a261;
+      background: rgba(244, 162, 97, 0.14);
+    }
+
+    .clue-card.locked-role {
+      opacity: 0.65;
+      border-left-color: #556;
+    }
+
+    .clue-card .role-header {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .challenges-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    .challenge-item {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+    }
+
+    .challenge-item.selected {
+      border-color: var(--accent);
+      background: #274057;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .badge.alpha { background: rgba(230, 57, 70, 0.25); color: #ff8fa3; border: 1px solid #e63946; }
+    .badge.beta { background: rgba(42, 157, 143, 0.25); color: #80ed99; border: 1px solid #2a9d8f; }
+    .badge.solved { background: #2a9d8f; color: #fff; }
+
+    /* PANEL DE RADIO Y CHAT PRIVADO DEL EQUIPO */
+    .team-comms-panel {
+      display: flex;
+      flex-direction: column;
+      height: 640px;
+      border: 2px solid var(--primary);
+    }
+
+    .team-comms-panel.alpha-theme { border-color: rgba(230, 57, 70, 0.6); }
+    .team-comms-panel.beta-theme { border-color: rgba(42, 157, 143, 0.6); }
+
+    .voice-bar {
+      background: rgba(0,0,0,0.3);
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .voice-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .ptt-btn {
+      flex: 1;
+      background: #2b455c;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .ptt-btn.recording {
+      background: var(--danger);
+      animation: pulseRec 1s infinite;
+    }
+
+    @keyframes pulseRec {
+      0% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(230, 57, 70, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0); }
+    }
+
+    .live-room-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      background: rgba(8, 15, 22, 0.65);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .chat-msg {
+      background: var(--bg-card);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      max-width: 92%;
+      align-self: flex-start;
+    }
+
+    .chat-msg.mine {
+      background: #264a60;
+      align-self: flex-end;
+      border: 1px solid rgba(217, 194, 173, 0.3);
+    }
+
+    .chat-msg .msg-meta {
+      font-size: 0.72rem;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 3px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .chat-msg audio {
+      width: 210px;
+      height: 32px;
+      margin-top: 4px;
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .chat-input-row input {
+      flex: 1;
+      padding: 9px 11px;
+      background: var(--bg-dark);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.88rem;
+    }
+
+    .status-toast {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- 1. BARRA SUPERIOR: MARCADOR Y SALA DE PARTIDA -->
+  <header class="top-bar">
+    <div class="brand">
+      <div style="font-size: 1.8rem;">🧭</div>
+      <div>
+        <h1>Digital Treasure Hunters</h1>
+        <span>Multijugador por Salas y Equipos — ForgeProjects.es</span>
+      </div>
+    </div>
+
+    <!-- Selector de Sala / Partida -->
+    <div class="room-box">
+      <span style="font-size: 0.8rem; color: var(--accent); font-weight: 700;">🎲 SALA:</span>
+      <input type="text" id="room-code-input" value="SALA-1" title="Escribe el código de tu partida">
+      <button class="mini-btn" onclick="changeRoom()">Entrar</button>
+      <button class="mini-btn" style="background: var(--secondary);" onclick="createNewRandomRoom()" title="Crear una sala nueva aleatoria">+ Nueva</button>
+      <button class="mini-btn" style="background: #2a9d8f;" onclick="copyRoomInviteLink()" id="invite-link-btn">🔗 Invitar</button>
+    </div>
+
+    <!-- Marcador de la Sala Actual -->
+    <div class="scoreboard">
+      <button id="btn-team-alpha" class="team-btn alpha active" onclick="setTeam('team-alpha')">
+        ⚔️ ALPHA <span class="score-num" id="score-alpha">0</span>
+      </button>
+      <span style="font-weight: 900; color: var(--accent); font-size: 0.8rem;">VS</span>
+      <button id="btn-team-beta" class="team-btn beta" onclick="setTeam('team-beta')">
+        🛡️ BETA <span class="score-num" id="score-beta">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 2. BARRA DE JUGADOR Y ROL PRINCIPAL -->
+  <section class="player-bar">
+    <div class="player-name-box">
+      <label for="player-name" style="font-size: 0.82rem; color: var(--accent); font-weight: 700;">👤 Tu Nombre:</label>
+      <input type="text" id="player-name" value="Agente" placeholder="Tu alias">
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <span style="font-size: 0.8rem; color: var(--text-muted);">Elige tu Rol Principal (los colores naranjas son roles extra asignados si sois menos de 5):</span>
+      <div class="roles-strip" id="roles-strip">
+        <button class="role-pill preferred" data-role="decoder" onclick="setPreferredRole('decoder')">🔎 Decodificador</button>
+        <button class="role-pill" data-role="navigator" onclick="setPreferredRole('navigator')">🧭 Navegador</button>
+        <button class="role-pill" data-role="historian" onclick="setPreferredRole('historian')">📚 Historiador</button>
+        <button class="role-pill" data-role="translator" onclick="setPreferredRole('translator')">🌐 Traductor</button>
+        <button class="role-pill" data-role="visual-analyst" onclick="setPreferredRole('visual-analyst')">👁️ Analista Visual</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. BANNER DINÁMICO DE MIEMBROS Y REPARTO AUTOMÁTICO DE ROLES -->
+  <div class="squad-banner">
+    <div class="squad-members-list" id="squad-members-list">
+      <span>Cargando escuadrón...</span>
+    </div>
+    <div id="my-assigned-roles-summary" style="color: var(--accent); font-weight: 600;"></div>
+  </div>
+
+  <!-- 4. CONTENEDOR PRINCIPAL + RADIO/CHAT PRIVADO -->
+  <div class="container">
+    <div class="main-layout">
+
+      <!-- ZONA IZQUIERDA: JUEGO (CAZAR / ESCONDER) -->
+      <div>
+        <div class="tabs-nav">
+          <button id="tab-hunt-btn" class="tab-btn active" onclick="switchMode('hunt')">
+            🕵️ MODO CAZA: Objetivos en esta Sala (<span id="active-count">0</span> activos)
+          </button>
+          <button id="tab-hide-btn" class="tab-btn" onclick="switchMode('hide')">
+            🎯 MODO ESCONDER: Subir Captura + Crear Pistas con IA
+          </button>
+        </div>
+
+        <!-- VISTA MODO CAZA -->
+        <div id="view-hunt" class="workspace-grid">
+          <div class="panel">
+            <h2>🔥 Objetivos en la Sala <span id="current-room-label" style="color:#fff;">SALA-1</span></h2>
+            <p class="sub">Selecciona un objetivo oculto por el equipo rival. Tus pistas asignadas se desbloquean según los roles que ocupas en tu equipo.</p>
+            <div id="challenges-list" class="challenges-list">
+              <p style="color: var(--text-muted);">Cargando retos de la sala...</p>
+            </div>
+          </div>
+
+          <div class="panel" id="investigation-desk">
+            <div id="no-challenge-selected">
+              <h2>🕵️ Mesa de Investigación</h2>
+              <p class="sub">Selecciona un reto a la izquierda o pulsa en <strong>"🎯 MODO ESCONDER"</strong> para plantar el primer objetivo de la partida.</p>
+            </div>
+
+            <div id="challenge-detail-box" class="hidden">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h2 id="detail-title">Objetivo Misterioso</h2>
+                <button class="role-pill" id="toggle-all-clues-btn" onclick="toggleAllClues()">Mostrar los 5 roles</button>
+              </div>
+
+              <p style="font-size: 0.82rem; color: var(--accent); margin-bottom: 4px;">
+                📸 <strong>Paso 1:</strong> Haz clic en el punto exacto de la captura donde está el objetivo:
+              </p>
+              <div class="image-stage" id="verify-image-stage" onclick="handleVerifyImageClick(event)">
+                <img id="detail-screenshot" src="" alt="Captura del reto">
+                <div id="verify-pin" class="target-pin verify-pin hidden">🎯</div>
+              </div>
+
+              <div style="margin-top: 14px;">
+                <h3 style="font-size: 0.95rem; color: var(--accent); margin-bottom: 6px;">
+                  🧩 Tus Pistas Desbloqueadas (según tus roles en el equipo)
+                </h3>
+                <div id="detail-clues-container"></div>
+              </div>
+
+              <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.12);">
+                <div class="form-group">
+                  <label for="attempt-url">🌐 Paso 2: URL o dominio de la página web:</label>
+                  <input type="text" id="attempt-url" placeholder="Ej: https://es.wikipedia.org/wiki/Apolo_11">
+                </div>
+                <div class="form-group">
+                  <label for="attempt-keyword">🔑 O palabra clave / nombre del elemento oculto:</label>
+                  <input type="text" id="attempt-keyword" placeholder="Ej: Módulo Eagle">
+                </div>
+                <button class="btn btn-success" onclick="submitVerification()">
+                  🏆 ¡Lo Encontré! Reclamar Punto para mi Equipo
+                </button>
+                <div id="verify-feedback" class="status-toast"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA MODO ESCONDER -->
+        <div id="view-hide" class="workspace-grid hidden">
+          <div class="panel">
+            <h2>📸 1. Pega o Sube tu Captura</h2>
+            <p class="sub">Haz una captura de cualquier web (<code>Win+Shift+S</code> o móvil), pulsa <strong>Ctrl+V</strong> o súbela, y haz clic sobre el detalle que quieres esconder.</p>
+
+            <div class="dropzone" onclick="document.getElementById('file-input').click()">
+              <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+              <p style="font-weight: 700; color: var(--accent);">📋 Pulsa Ctrl+V para pegar captura o haz clic para subir imagen</p>
+            </div>
+
+            <button class="role-pill" style="margin-top: 8px; width: 100%;" onclick="loadDemoScreenshot()">
+              ✨ Cargar captura de ejemplo para probar rápido
+            </button>
+
+            <div id="hide-stage-wrapper" class="hidden" style="margin-top: 12px;">
+              <p style="font-size: 0.82rem; color: #ff8fa3; margin-bottom: 4px;">
+                🎯 <strong>Haz clic en la imagen</strong> para colocar la diana en el objeto secreto:
+              </p>
+              <div class="image-stage" id="hide-image-stage" onclick="handleHideImageClick(event)">
+                <img id="hide-preview-img" src="" alt="Vista previa">
+                <div id="hide-pin" class="target-pin" style="left: 50%; top: 50%;">🎯</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>🤖 2. Generar Pistas con IA para la Sala</h2>
+            <p class="sub">La IA creará 5 pistas (una por rol) y las repartirá entre los jugadores del equipo contrario de la sala <strong id="hide-room-label">SALA-1</strong>.</p>
+
+            <div class="form-group">
+              <label for="hide-url">🌐 URL exacta donde tomaste la captura:</label>
+              <input type="url" id="hide-url" placeholder="https://es.wikipedia.org/wiki/..." required>
+            </div>
+
+            <div class="form-group">
+              <label for="hide-secret-label">🏷️ ¿Qué elemento marcaste en la foto? (Palabra clave):</label>
+              <input type="text" id="hide-secret-label" placeholder="Ej: Reliquia 1492 / Escudo / Título">
+            </div>
+
+            <div class="form-group">
+              <label for="hide-extra-context">📝 Pista o contexto adicional de la página (opcional):</label>
+              <textarea id="hide-extra-context" rows="3" placeholder="Fechas, tema o detalles curiosos de la página..."></textarea>
+            </div>
+
+            <button class="btn btn-danger" id="create-challenge-btn" onclick="createChallengeWithAI()">
+              🚀 Esconder Objetivo y Generar 5 Pistas con IA
+            </button>
+            <div id="hide-feedback" class="status-toast"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ZONA DERECHA: CHAT PRIVADO Y RADIO DE VOZ DEL EQUIPO -->
+      <aside class="panel team-comms-panel alpha-theme" id="team-comms-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <h2 id="comms-title" style="font-size: 1.05rem;">🔒 Chat y Voz — Equipo Alpha</h2>
+          <span class="badge alpha" id="comms-privacy-badge">Solo tu equipo</span>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">
+          Comparte tus pistas asignadas por escrito, envía notas de voz o abre el canal de voz en vivo.
+        </p>
+
+        <!-- Controles de Voz: Walkie-Talkie + Sala de Voz en Vivo -->
+        <div class="voice-bar">
+          <div class="voice-controls">
+            <button type="button" id="ptt-record-btn" class="ptt-btn" onclick="toggleVoiceNoteRecording()">
+              🎙️ Grabar Nota de Voz (Walkie-Talkie)
+            </button>
+            <button type="button" class="live-room-btn" onclick="toggleLiveVoiceChannel()" id="live-voice-btn">
+              🎧 Sala Voz Live
+            </button>
+          </div>
+          <label style="font-size: 0.75rem; color: var(--accent); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="checkbox" id="autoplay-voice-chk" checked>
+            🔊 Reproducir automáticamente las notas de voz entrantes del equipo
+          </label>
+          <!-- Contenedor de Sala de Voz en Vivo (Jitsi WebRTC filtrado por Sala + Equipo) -->
+          <div id="live-voice-container" class="hidden" style="margin-top: 6px; border-radius: 8px; overflow: hidden; border: 1px solid var(--accent);">
+            <iframe id="live-voice-iframe" allow="microphone; autoplay" style="width: 100%; height: 155px; border: none; background: #000;"></iframe>
+          </div>
+        </div>
+
+        <!-- Mensajes del Chat Privado del Equipo -->
+        <div class="chat-messages" id="team-chat-messages">
+          <div class="chat-msg">
+            <div class="msg-meta"><span>Control de Mando</span></div>
+            <div>Conectando al canal privado de tu equipo...</div>
+          </div>
+        </div>
+
+        <!-- Enviar mensaje de texto o compartir mis pistas con 1 clic -->
+        <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+          <button type="button" class="role-pill" style="width: 100%; text-align: center;" onclick="shareMyAssignedCluesToChat()">
+            📋 Pegar mis pistas asignadas en el chat del equipo
+          </button>
+        </div>
+        <form class="chat-input-row" onsubmit="sendTextChatMessage(event)">
+          <input type="text" id="chat-text-input" placeholder="Escribe a tu equipo..." maxlength="400">
+          <button type="submit" class="mini-btn" style="padding: 0 14px;">Enviar</button>
+        </form>
+      </aside>
+
+    </div>
+  </div>
+
+  <script>
+    // ================= ESTADO MULTIJUGADOR POR SALA Y EQUIPO =================
+    const ALL_ROLES = ['decoder', 'navigator', 'historian', 'translator', 'visual-analyst'];
+    const ROLE_NAMES = {
+      'decoder': '🔎 Decodificador',
+      'navigator': '🧭 Navegador',
+      'historian': '📚 Historiador',
+      'translator': '🌐 Traductor',
+      'visual-analyst': '👁️ Analista Visual'
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialRoom = (urlParams.get('room') || localStorage.getItem('dth_room') || 'SALA-1').toUpperCase();
+
+    let playerId = localStorage.getItem('dth_player_id');
+    if (!playerId) {
+      playerId = 'p_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+      localStorage.setItem('dth_player_id', playerId);
+    }
+
+    let state = {
+      roomCode: initialRoom,
+      playerId: playerId,
+      playerName: localStorage.getItem('dth_name') || ('Agente-' + playerId.slice(2, 5).toUpperCase()),
+      team: localStorage.getItem('dth_team') || 'team-alpha',
+      preferredRole: localStorage.getItem('dth_role') || 'decoder',
+      assignedRoles: ['decoder', 'navigator', 'historian', 'translator', 'visual-analyst'],
+      players: [],
+      challenges: [],
+      teamScores: { 'team-alpha': 0, 'team-beta': 0 },
+      teamChat: [],
+      selectedChallengeId: null,
+      showAllClues: false,
+      hideImageDataUrl: null,
+      hidePoint: { x: 50, y: 50 },
+      verifyPoint: null,
+      playedAudioIds: new Set(),
+      initialChatLoaded: false
+    };
+
+    // Grabadora de voz Walkie-Talkie
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecordingVoice = false;
+    let liveVoiceOpen = false;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('room-code-input').value = state.roomCode;
+      document.getElementById('current-room-label').textContent = state.roomCode;
+      document.getElementById('hide-room-label').textContent = state.roomCode;
+
+      const nameInput = document.getElementById('player-name');
+      nameInput.value = state.playerName;
+      nameInput.addEventListener('change', () => {
+        state.playerName = nameInput.value.trim() || 'Agente';
+        localStorage.setItem('dth_name', state.playerName);
+        registerPresenceInRoom();
+      });
+
+      updateTeamThemeUI();
+      await registerPresenceInRoom();
+      await syncRoomState();
+
+      // Sincronización periódica cada 3.5 segundos (jugadores, roles, retos y chat/voz de equipo)
+      setInterval(syncRoomState, 3500);
+
+      // Soporte para pegar capturas con Ctrl+V
+      window.addEventListener('paste', handleClipboardPaste);
+    });
+
+    // ================= GESTIÓN DE SALAS (PARTIDAS) =================
+    async function changeRoom() {
+      const input = document.getElementById('room-code-input').value.trim().toUpperCase().replace(/[^A-Z0-9\-_]/g, '');
+      if (!input) return;
+      state.roomCode = input;
+      localStorage.setItem('dth_room', state.roomCode);
+      state.selectedChallengeId = null;
+      state.initialChatLoaded = false;
+      document.getElementById('current-room-label').textContent = state.roomCode;
+      document.getElementById('hide-room-label').textContent = state.roomCode;
+
+      const newUrl = `${window.location.pathname}?room=${encodeURIComponent(state.roomCode)}`;
+      window.history.replaceState({}, '', newUrl);
+
+      if (liveVoiceOpen) {
+        updateLiveVoiceIframe();
+      }
+
+      await registerPresenceInRoom();
+      await syncRoomState();
+    }
+
+    function createNewRandomRoom() {
+      const code = 'SALA-' + Math.floor(100 + Math.random() * 900);
+      document.getElementById('room-code-input').value = code;
+      changeRoom();
+    }
+
+    function copyRoomInviteLink() {
+      const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(state.roomCode)}`;
+      navigator.clipboard.writeText(inviteUrl).catch(() => {});
+      const btn = document.getElementById('invite-link-btn');
+      const oldText = btn.textContent;
+      btn.textContent = '✅ Enlace Copiado';
+      setTimeout(() => { btn.textContent = oldText; }, 2000);
+    }
+
+    // ================= GESTIÓN DE EQUIPO Y REPARTO MULTIRROL =================
+    async function setTeam(teamId) {
+      state.team = teamId;
+      localStorage.setItem('dth_team', teamId);
+      state.initialChatLoaded = false;
+      updateTeamThemeUI();
+      if (liveVoiceOpen) {
+        updateLiveVoiceIframe();
+      }
+      await registerPresenceInRoom();
+      await syncRoomState();
+    }
+
+    async function setPreferredRole(roleId) {
+      state.preferredRole = roleId;
+      localStorage.setItem('dth_role', roleId);
+      await registerPresenceInRoom();
+      await syncRoomState();
+    }
+
+    function updateTeamThemeUI() {
+      const isAlpha = state.team === 'team-alpha';
+      document.getElementById('btn-team-alpha').classList.toggle('active', isAlpha);
+      document.getElementById('btn-team-beta').classList.toggle('active', !isAlpha);
+
+      const commsPanel = document.getElementById('team-comms-panel');
+      commsPanel.classList.toggle('alpha-theme', isAlpha);
+      commsPanel.classList.toggle('beta-theme', !isAlpha);
+
+      document.getElementById('comms-title').textContent = isAlpha
+        ? '🔒 Radio y Chat — Equipo Alpha'
+        : '🔒 Radio y Chat — Equipo Beta';
+
+      const badge = document.getElementById('comms-privacy-badge');
+      badge.className = 'badge ' + (isAlpha ? 'alpha' : 'beta');
+      badge.textContent = isAlpha ? 'Solo Alpha' : 'Solo Beta';
+    }
+
+    // Reparto local de respaldo (idéntico al del servidor PHP) por si aún no respondió la red
+    function computeLocalRoleAssignment() {
+      const myTeamPlayers = state.players.filter(p => p.team === state.team);
+      if (myTeamPlayers.length <= 1) {
+        state.assignedRoles = [...ALL_ROLES];
+        return;
+      }
+      const me = myTeamPlayers.find(p => p.id === state.playerId);
+      if (me && Array.isArray(me.assignedRoles) && me.assignedRoles.length > 0) {
+        state.assignedRoles = me.assignedRoles;
+      }
+    }
+
+    async function registerPresenceInRoom() {
+      try {
+        const res = await fetch('./api/?action=joinRoom', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomCode: state.roomCode,
+            playerId: state.playerId,
+            name: state.playerName,
+            team: state.team,
+            preferredRole: state.preferredRole
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success) {
+            state.players = data.players || [];
+            if (data.player && Array.isArray(data.player.assignedRoles)) {
+              state.assignedRoles = data.player.assignedRoles;
+            }
+            renderSquadAndRolesBar();
+          }
+        }
+      } catch (e) {
+        computeLocalRoleAssignment();
+        renderSquadAndRolesBar();
+      }
+    }
+
+    async function syncRoomState() {
+      try {
+        const res = await fetch(`./api/?action=roomState&room=${encodeURIComponent(state.roomCode)}&playerId=${encodeURIComponent(state.playerId)}&teamId=${encodeURIComponent(state.team)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success) {
+            state.players = data.players || [];
+            state.teamScores = data.teamScores || { 'team-alpha': 0, 'team-beta': 0 };
+
+            const me = state.players.find(p => p.id === state.playerId);
+            if (me && Array.isArray(me.assignedRoles) && me.assignedRoles.length > 0) {
+              state.assignedRoles = me.assignedRoles;
+            } else {
+              computeLocalRoleAssignment();
+            }
+
+            // Actualizar retos
+            const remoteChallenges = data.challenges || [];
+            if (remoteChallenges.length === 0 && state.challenges.length === 0) {
+              await seedInitialDemoChallengeToServer();
+              return;
+            } else {
+              state.challenges = remoteChallenges;
+            }
+
+            if (!state.selectedChallengeId && state.challenges.length > 0) {
+              state.selectedChallengeId = state.challenges[0].id;
+            }
+
+            // Actualizar Chat y Voz del equipo
+            if (Array.isArray(data.teamChat)) {
+              handleIncomingTeamChat(data.teamChat);
+            }
+
+            document.getElementById('score-alpha').textContent = state.teamScores['team-alpha'] || 0;
+            document.getElementById('score-beta').textContent = state.teamScores['team-beta'] || 0;
+            document.getElementById('active-count').textContent = state.challenges.filter(c => c.status === 'active').length;
+
+            renderSquadAndRolesBar();
+            renderChallengesList();
+            renderSelectedChallenge();
+          }
+        }
+      } catch (e) {}
+    }
+
+    function renderSquadAndRolesBar() {
+      // 1. Píldoras de roles arriba: marcar el rol preferido y en naranja los roles adicionales que te tocaron
+      document.querySelectorAll('#roles-strip .role-pill').forEach(btn => {
+        const r = btn.dataset.role;
+        const isPref = (r === state.preferredRole);
+        const isAssigned = state.assignedRoles.includes(r);
+        btn.classList.toggle('preferred', isPref);
+        btn.classList.toggle('assigned-extra', !isPref && isAssigned);
+      });
+
+      // 2. Lista de miembros de ambos equipos en esta sala
+      const alphaPlayers = state.players.filter(p => p.team === 'team-alpha');
+      const betaPlayers = state.players.filter(p => p.team === 'team-beta');
+      const myTeamPlayers = state.team === 'team-alpha' ? alphaPlayers : betaPlayers;
+
+      const listEl = document.getElementById('squad-members-list');
+      if (myTeamPlayers.length === 0) {
+        listEl.innerHTML = `<span>Conectado en solitario (ocupas los 5 roles de tu equipo)</span>`;
+      } else {
+        listEl.innerHTML = `
+          <strong style="color: var(--accent);">Miembros en tu ${state.team === 'team-alpha' ? '⚔️ Equipo Alpha' : '🛡️ Equipo Beta'} (${myTeamPlayers.length}):</strong>
+          ${myTeamPlayers.map(p => {
+            const rolesIcons = (p.assignedRoles || [p.preferredRole]).map(r => ROLE_NAMES[r].split(' ')[0]).join('');
+            return `<span class="member-chip ${p.id === state.playerId ? 'me' : ''}">
+              🟢 ${p.name} <span title="Roles asignados">${rolesIcons} (${(p.assignedRoles || []).length} rol/es)</span>
+            </span>`;
+          }).join('')}
+          <span style="color: var(--text-muted); margin-left: 8px;">| Rivales en la sala: ${state.team === 'team-alpha' ? betaPlayers.length : alphaPlayers.length}</span>
+        `;
+      }
+
+      const summaryEl = document.getElementById('my-assigned-roles-summary');
+      summaryEl.textContent = `Tus roles en esta partida (${state.assignedRoles.length}/5): ` +
+        state.assignedRoles.map(r => ROLE_NAMES[r]).join(', ');
+    }
+
+    // ================= CHAT PRIVADO DE EQUIPO + NOTAS DE VOZ WALKIE-TALKIE + SALA LIVE =================
+    function handleIncomingTeamChat(messages) {
+      const container = document.getElementById('team-chat-messages');
+      const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 40;
+
+      // Detectar si llegó alguna nota de voz nueva de un compañero para reproducirla como Walkie-Talkie
+      const autoPlay = document.getElementById('autoplay-voice-chk').checked;
+      messages.forEach(m => {
+        if (m.type === 'audio' && m.audioData && !state.playedAudioIds.has(m.id)) {
+          state.playedAudioIds.add(m.id);
+          if (state.initialChatLoaded && autoPlay && m.senderId !== state.playerId) {
+            const audio = new Audio(m.audioData);
+            audio.play().catch(() => {});
+          }
+        }
+      });
+      state.initialChatLoaded = true;
+
+      container.innerHTML = messages.map(m => {
+        const isMine = m.senderId === state.playerId;
+        const timeStr = new Date(m.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `
+          <div class="chat-msg ${isMine ? 'mine' : ''}">
+            <div class="msg-meta">
+              <span>${m.senderName || 'Agente'}</span>
+              <span>${timeStr}</span>
+            </div>
+            ${m.type === 'audio' && m.audioData
+              ? `<div>🎙️ Nota de voz:<br><audio controls src="${m.audioData}"></audio></div>`
+              : `<div>${m.text}</div>`
+            }
+          </div>
+        `;
+      }).join('');
+
+      if (wasAtBottom) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    async function sendTextChatMessage(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('chat-text-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+
+      await fetch('./api/?action=sendTeamMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode: state.roomCode,
+          teamId: state.team,
+          playerId: state.playerId,
+          senderName: state.playerName,
+          type: 'text',
+          text: text
+        })
+      }).then(r => r.json()).then(data => {
+        if (data && data.teamChat) handleIncomingTeamChat(data.teamChat);
+      }).catch(() => {});
+    }
+
+    async function shareMyAssignedCluesToChat() {
+      const ch = state.challenges.find(c => c.id === state.selectedChallengeId);
+      if (!ch || !ch.clues) return;
+
+      const summary = state.assignedRoles.map(r => `[${ROLE_NAMES[r]}]: ${ch.clues[r] || ''}`).join(' | ');
+      await fetch('./api/?action=sendTeamMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode: state.roomCode,
+          teamId: state.team,
+          playerId: state.playerId,
+          senderName: state.playerName,
+          type: 'text',
+          text: `📋 Mis pistas del reto: ${summary}`.substring(0, 480)
+        })
+      }).then(r => r.json()).then(data => {
+        if (data && data.teamChat) handleIncomingTeamChat(data.teamChat);
+      }).catch(() => {});
+    }
+
+    // Grabación de Nota de Voz (Walkie-Talkie en el chat privado)
+    async function toggleVoiceNoteRecording() {
+      const btn = document.getElementById('ptt-record-btn');
+
+      if (isRecordingVoice && mediaRecorder) {
+        mediaRecorder.stop();
+        isRecordingVoice = false;
+        btn.classList.remove('recording');
+        btn.textContent = '⏳ Enviando voz...';
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          stream.getTracks().forEach(t => t.stop());
+          const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const base64Audio = reader.result;
+            await fetch('./api/?action=sendTeamMessage', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                roomCode: state.roomCode,
+                teamId: state.team,
+                playerId: state.playerId,
+                senderName: state.playerName,
+                type: 'audio',
+                audioData: base64Audio,
+                text: 'Nota de voz'
+              })
+            }).then(r => r.json()).then(data => {
+              if (data && data.teamChat) handleIncomingTeamChat(data.teamChat);
+            }).catch(() => {});
+            btn.textContent = '🎙️ Grabar Nota de Voz (Walkie-Talkie)';
+          };
+          reader.readAsDataURL(blob);
+        };
+
+        mediaRecorder.start();
+        isRecordingVoice = true;
+        btn.classList.add('recording');
+        btn.textContent = '⏹️ Pulsa para Terminar y Enviar (Máx 12s)';
+
+        // Auto-corte a los 12 segundos para que el audio sea ligero y rápido
+        setTimeout(() => {
+          if (isRecordingVoice && mediaRecorder && mediaRecorder.state === 'recording') {
+            toggleVoiceNoteRecording();
+          }
+        }, 12000);
+      } catch (err) {
+        alert('Permite el acceso al micrófono en tu navegador para enviar notas de voz a tu equipo.');
+      }
+    }
+
+    // Sala de Voz en Vivo (WebRTC por equipo)
+    function toggleLiveVoiceChannel() {
+      const box = document.getElementById('live-voice-container');
+      const btn = document.getElementById('live-voice-btn');
+      liveVoiceOpen = !liveVoiceOpen;
+
+      if (liveVoiceOpen) {
+        box.classList.remove('hidden');
+        btn.textContent = '❌ Salir Voz Live';
+        btn.style.background = '#e63946';
+        updateLiveVoiceIframe();
+      } else {
+        box.classList.add('hidden');
+        document.getElementById('live-voice-iframe').src = 'about:blank';
+        btn.textContent = '🎧 Sala Voz Live';
+        btn.style.background = 'var(--primary)';
+      }
+    }
+
+    function updateLiveVoiceIframe() {
+      const safeRoom = (`DTH_ForgeProjects_${state.roomCode}_${state.team}`).replace(/[^a-zA-Z0-9_]/g, '');
+      const jitsiUrl = `https://meet.jit.si/${safeRoom}#config.startWithVideoMuted=true&config.prejoinPageEnabled=false&userInfo.displayName="${encodeURIComponent(state.playerName)}"`;
+      document.getElementById('live-voice-iframe').src = jitsiUrl;
+    }
+
+    // ================= LÓGICA DE JUEGO: ESCONDER Y CAZAR =================
+    function switchMode(mode) {
+      const isHunt = (mode === 'hunt');
+      document.getElementById('tab-hunt-btn').classList.toggle('active', isHunt);
+      document.getElementById('tab-hide-btn').classList.toggle('active', !isHunt);
+      document.getElementById('view-hunt').classList.toggle('hidden', !isHunt);
+      document.getElementById('view-hide').classList.toggle('hidden', isHunt);
+    }
+
+    function handleClipboardPaste(e) {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (const item of items) {
+        if (item.type.indexOf('image') === 0) {
+          processImageFile(item.getAsFile());
+          switchMode('hide');
+          break;
+        }
+      }
+    }
+
+    function handleFileSelect(e) {
+      if (e.target.files && e.target.files[0]) {
+        processImageFile(e.target.files[0]);
+      }
+    }
+
+    function processImageFile(file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxW = 700;
+          const scale = Math.min(1, maxW / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          state.hideImageDataUrl = canvas.toDataURL('image/jpeg', 0.72);
+          state.hidePoint = { x: 50, y: 50 };
+          showHidePreview();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function loadDemoScreenshot() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 360;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#1d3557';
+      ctx.fillRect(0, 0, 640, 360);
+      ctx.fillStyle = '#2a4a73';
+      ctx.fillRect(20, 20, 600, 60);
+      ctx.fillStyle = '#f1faee';
+      ctx.font = 'bold 21px Segoe UI';
+      ctx.fillText('Enciclopedia — El Faro de Alejandría (280 a.C.)', 35, 58);
+
+      ctx.fillStyle = '#14243b';
+      ctx.fillRect(20, 95, 380, 245);
+      ctx.fillStyle = '#a8dadc';
+      ctx.font = '15px Segoe UI';
+      ctx.fillText('Construido en la isla de Faros durante el reinado', 35, 130);
+      ctx.fillText('de Ptolomeo II en Egipto.', 35, 155);
+
+      ctx.fillStyle = '#e63946';
+      ctx.fillRect(420, 110, 190, 130);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 18px monospace';
+      ctx.fillText('🏛️ RELIQUIA #1492', 435, 175);
+
+      state.hideImageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      state.hidePoint = { x: 80, y: 48 };
+      document.getElementById('hide-url').value = 'https://es.wikipedia.org/wiki/Faro_de_Alejandr%C3%ADa';
+      document.getElementById('hide-secret-label').value = 'Reliquia 1492 del Faro de Alejandría';
+      document.getElementById('hide-extra-context').value = 'Construido en el siglo III a.C. en Egipto bajo Ptolomeo II.';
+      showHidePreview();
+    }
+
+    function showHidePreview() {
+      const wrapper = document.getElementById('hide-stage-wrapper');
+      const img = document.getElementById('hide-preview-img');
+      const pin = document.getElementById('hide-pin');
+      img.src = state.hideImageDataUrl;
+      pin.style.left = state.hidePoint.x + '%';
+      pin.style.top = state.hidePoint.y + '%';
+      wrapper.classList.remove('hidden');
+    }
+
+    function handleHideImageClick(e) {
+      const stage = document.getElementById('hide-image-stage');
+      const rect = stage.getBoundingClientRect();
+      state.hidePoint = {
+        x: Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left) / rect.width) * 100))),
+        y: Math.max(0, Math.min(100, Math.round(((e.clientY - rect.top) / rect.height) * 100)))
+      };
+      const pin = document.getElementById('hide-pin');
+      pin.style.left = state.hidePoint.x + '%';
+      pin.style.top = state.hidePoint.y + '%';
+    }
+
+    function buildFallbackClues(meta, secretLabel, extraContext) {
+      let host = 'wikipedia.org';
+      let path = '/';
+      try {
+        const u = new URL(meta.url);
+        host = u.hostname.replace(/^www\./, '');
+        path = u.pathname;
+      } catch (e) {}
+
+      const hostParts = host.split('.');
+      const mainDomain = hostParts[0] || host;
+      const tld = hostParts.slice(1).join('.') || 'org';
+      const b64 = btoa(unescape(encodeURIComponent(mainDomain)));
+      const years = (meta.years && meta.years.length > 0) ? meta.years.join(', ') : 'época histórica';
+
+      return {
+        'decoder': `Código Base64 del portal objetivo: "${b64}". Descífralo para obtener el nombre del sitio web.`,
+        'navigator': `El objetivo se aloja en un dominio terminado en ".${tld}" con ${path.split('/').filter(Boolean).length} nivel(es) en su ruta.`,
+        'historian': `Contexto de la página: "${(meta.pageTitle || secretLabel).substring(0, 55)}". Fechas detectadas: ${years}. ${extraContext}`,
+        'translator': `Idioma del documento: "${meta.lang || 'es'}". El elemento oculto consta de ${secretLabel.split(/\s+/).length} palabra(s) y empieza por "${secretLabel.substring(0, 4)}...".`,
+        'visual-analyst': `En la captura, apunta a las coordenadas (${state.hidePoint.x}% horizontal, ${state.hidePoint.y}% vertical) donde se ve "${secretLabel.substring(0, 22)}...".`
+      };
+    }
+
+    async function generateFreeAIClues(meta, secretLabel, extraContext) {
+      const fallback = buildFallbackClues(meta, secretLabel, extraContext);
+      try {
+        const prompt = `Eres el Director de Juego de "Digital Treasure Hunters". Un equipo escondió un elemento en una captura web y el equipo rival debe encontrar la web y señalar el punto.
+Datos reales:
+- URL: ${meta.url}
+- Dominio: ${meta.hostname}
+- Título: ${meta.pageTitle}
+- Encabezados: ${(meta.headings || []).join(' | ')}
+- Fechas: ${(meta.years || []).join(', ')}
+- Objeto marcado: "${secretLabel}" (en ${state.hidePoint.x}% X, ${state.hidePoint.y}% Y)
+- Notas: "${extraContext}"
+
+Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal completa):
+{
+  "decoder": "Pista con palabra clave del dominio o ruta en Base64 o cifrado César",
+  "navigator": "Pista sobre el tipo de sitio web, extensión de dominio y ruta",
+  "historian": "Pista sobre la historia, fechas o temática de esa página",
+  "translator": "Pista lingüística traduciendo el concepto clave a otro idioma",
+  "visual-analyst": "Pista visual indicando en qué zona de la captura fijarse y qué forma buscar"
+}`;
+
+        const res = await fetch('https://text.pollinations.ai/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              { role: 'system', content: 'Responde únicamente con un JSON válido con las claves decoder, navigator, historian, translator, visual-analyst.' },
+              { role: 'user', content: prompt }
+            ],
+            model: 'openai',
+            jsonMode: true
+          })
+        });
+
+        if (res.ok) {
+          const text = await res.text();
+          const match = text.match(/\{[\s\S]*\}/);
+          if (match) {
+            const parsed = JSON.parse(match[0]);
+            return {
+              'decoder': parsed.decoder || fallback['decoder'],
+              'navigator': parsed.navigator || fallback['navigator'],
+              'historian': parsed.historian || fallback['historian'],
+              'translator': parsed.translator || fallback['translator'],
+              'visual-analyst': parsed['visual-analyst'] || parsed.visualAnalyst || fallback['visual-analyst']
+            };
+          }
+        }
+      } catch (e) {}
+      return fallback;
+    }
+
+    async function createChallengeWithAI() {
+      const urlInput = document.getElementById('hide-url').value.trim();
+      const secretLabel = document.getElementById('hide-secret-label').value.trim();
+      const extraContext = document.getElementById('hide-extra-context').value.trim();
+      const btn = document.getElementById('create-challenge-btn');
+
+      if (!state.hideImageDataUrl) {
+        showToast('hide-feedback', '⚠️ Primero pega una captura (Ctrl+V) o carga la captura de ejemplo.', '#e63946');
+        return;
+      }
+      if (!urlInput || !secretLabel) {
+        showToast('hide-feedback', '⚠️ Indica la URL y el nombre del elemento marcado.', '#e63946');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Analizando URL y generando 5 pistas con IA...';
+
+      try {
+        let meta = { url: urlInput, hostname: '', pageTitle: secretLabel, headings: [], years: [], lang: 'es' };
+        try { meta.hostname = new URL(urlInput).hostname; } catch (e) {}
+
+        try {
+          const inspectRes = await fetch(`./api/?action=inspectUrl&url=${encodeURIComponent(urlInput)}`);
+          if (inspectRes.ok) {
+            const inspectData = await inspectRes.json();
+            if (inspectData && inspectData.success && inspectData.metadata) {
+              meta = { ...meta, ...inspectData.metadata };
+            }
+          }
+        } catch (e) {}
+
+        const clues = await generateFreeAIClues(meta, secretLabel, extraContext);
+
+        const newChallenge = {
+          id: 'ch_' + Date.now(),
+          createdAt: Date.now(),
+          roomCode: state.roomCode,
+          teamId: state.team,
+          createdBy: state.playerName,
+          status: 'active',
+          url: urlInput,
+          hostname: meta.hostname,
+          pageTitle: meta.pageTitle,
+          secretLabel: secretLabel,
+          targetPoint: state.hidePoint,
+          screenshot: state.hideImageDataUrl,
+          clues: clues
+        };
+
+        await fetch('./api/?action=createChallenge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roomCode: state.roomCode, challenge: newChallenge })
+        });
+
+        showToast('hide-feedback', '🎯 ¡Objetivo publicado en la sala! El equipo rival ya puede cazarlo.', '#2a9d8f');
+        await syncRoomState();
+        state.selectedChallengeId = newChallenge.id;
+        setTimeout(() => {
+          switchMode('hunt');
+          renderSelectedChallenge();
+        }, 700);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 Esconder Objetivo y Generar 5 Pistas con IA';
+      }
+    }
+
+    async function seedInitialDemoChallengeToServer() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 340;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#182836';
+      ctx.fillRect(0, 0, 640, 340);
+      ctx.fillStyle = '#284b63';
+      ctx.fillRect(25, 25, 590, 55);
+      ctx.fillStyle = '#d9c2ad';
+      ctx.font = 'bold 20px Segoe UI';
+      ctx.fillText('Archivo Secreto — Misión Apolo 11 (1969)', 40, 60);
+
+      ctx.fillStyle = '#0f1922';
+      ctx.fillRect(25, 95, 370, 215);
+      ctx.fillStyle = '#f2f5f7';
+      ctx.font = '14px Segoe UI';
+      ctx.fillText('El módulo lunar Eagle alunizó en el Mar de la', 40, 130);
+      ctx.fillText('Tranquilidad el 20 de julio de 1969.', 40, 155);
+
+      ctx.fillStyle = '#2a9d8f';
+      ctx.beginPath();
+      ctx.arc(505, 200, 65, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 16px Segoe UI';
+      ctx.fillText('🦅 MÓDULO EAGLE', 438, 205);
+
+      const demo = {
+        id: 'demo_apollo_1969',
+        createdAt: Date.now(),
+        roomCode: state.roomCode,
+        teamId: 'team-alpha',
+        createdBy: 'Comandante Alpha',
+        status: 'active',
+        url: 'https://es.wikipedia.org/wiki/Apolo_11',
+        hostname: 'es.wikipedia.org',
+        pageTitle: 'Apolo 11 - Wikipedia',
+        secretLabel: 'Módulo Eagle',
+        targetPoint: { x: 79, y: 59 },
+        screenshot: canvas.toDataURL('image/jpeg', 0.8),
+        clues: {
+          'decoder': 'El nombre de la misión está oculto en este código Base64: "QXBvbG8gMTE=".',
+          'navigator': 'Se encuentra en la enciclopedia libre (.org) en español, bajo la ruta /wiki/ de una famosa misión espacial.',
+          'historian': 'Ocurrió el 20 de julio de 1969 cuando el ser humano llegó por primera vez al Mar de la Tranquilidad.',
+          'translator': 'El nombre del módulo que debes señalar significa "Águila" en inglés.',
+          'visual-analyst': 'Haz clic sobre el círculo verde situado a la derecha de la imagen y escribe el nombre del módulo.'
+        }
+      };
+
+      state.challenges = [demo];
+      await fetch('./api/?action=createChallenge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomCode: state.roomCode, challenge: demo })
+      }).catch(() => {});
+      renderChallengesList();
+      renderSelectedChallenge();
+    }
+
+    function renderChallengesList() {
+      const listEl = document.getElementById('challenges-list');
+      if (state.challenges.length === 0) {
+        listEl.innerHTML = `<p style="color: var(--text-muted);">No hay objetivos en esta sala todavía.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = state.challenges.map(ch => {
+        const isAlpha = ch.teamId === 'team-alpha';
+        const isSelected = ch.id === state.selectedChallengeId;
+        const isSolved = ch.status === 'solved';
+
+        return `
+          <div class="challenge-item ${isSelected ? 'selected' : ''}" onclick="selectChallenge('${ch.id}')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+              <span class="badge ${isAlpha ? 'alpha' : 'beta'}">
+                Escondido por ${isAlpha ? '⚔️ Alpha' : '🛡️ Beta'} (${ch.createdBy || 'Agente'})
+              </span>
+              <span class="badge ${isSolved ? 'solved' : ''}">
+                ${isSolved ? '✅ Resuelto' : '🔥 Activo'}
+              </span>
+            </div>
+            <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">
+              Misterio #${ch.id.slice(-4)} — ${isSolved ? (ch.secretLabel || ch.pageTitle) : '¿En qué web está esta captura?'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectChallenge(id) {
+      state.selectedChallengeId = id;
+      state.verifyPoint = null;
+      document.getElementById('verify-pin').classList.add('hidden');
+      document.getElementById('verify-feedback').style.display = 'none';
+      renderChallengesList();
+      renderSelectedChallenge();
+    }
+
+    function toggleAllClues() {
+      state.showAllClues = !state.showAllClues;
+      document.getElementById('toggle-all-clues-btn').textContent = state.showAllClues
+        ? 'Ver solo mis roles asignados'
+        : 'Mostrar los 5 roles';
+      renderSelectedChallenge();
+    }
+
+    function renderSelectedChallenge() {
+      const ch = state.challenges.find(c => c.id === state.selectedChallengeId);
+      const emptyBox = document.getElementById('no-challenge-selected');
+      const detailBox = document.getElementById('challenge-detail-box');
+
+      if (!ch) {
+        emptyBox.classList.remove('hidden');
+        detailBox.classList.add('hidden');
+        return;
+      }
+
+      emptyBox.classList.add('hidden');
+      detailBox.classList.remove('hidden');
+
+      const teamName = ch.teamId === 'team-alpha' ? '⚔️ Equipo Alpha' : '🛡️ Equipo Beta';
+      document.getElementById('detail-title').textContent = ch.status === 'solved'
+        ? `✅ Resuelto: ${ch.secretLabel || ch.pageTitle}`
+        : `🔥 Objetivo plantado por ${teamName}`;
+
+      document.getElementById('detail-screenshot').src = ch.screenshot || '';
+
+      const cluesContainer = document.getElementById('detail-clues-container');
+      const clues = ch.clues || {};
+
+      // Mostrar las pistas de todos los roles que este jugador tiene asignados actualmente
+      const rolesToRender = state.showAllClues ? ALL_ROLES : state.assignedRoles;
+
+      cluesContainer.innerHTML = ALL_ROLES.map(roleKey => {
+        const isMine = state.assignedRoles.includes(roleKey);
+        if (!isMine && !state.showAllClues) {
+          // Averiguar qué compañero de mi equipo tiene asignado este rol
+          const teammate = state.players.find(p => p.team === state.team && (p.assignedRoles || []).includes(roleKey));
+          const holderName = teammate ? teammate.name : 'otro miembro de tu equipo';
+          return `
+            <div class="clue-card locked-role">
+              <div class="role-header">
+                <span>${ROLE_NAMES[roleKey]}</span>
+                <span>🔒 Asignado a: ${holderName}</span>
+              </div>
+              <div>Pídele esta pista a <strong>${holderName}</strong> por el Chat Privado o Radio de Voz de tu equipo.</div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="clue-card ${isMine ? 'my-role' : ''}">
+            <div class="role-header">
+              <span>${ROLE_NAMES[roleKey]}</span>
+              <span>${isMine ? '✅ TU ROL ASIGNADO' : 'VISTA COMPLETA'}</span>
+            </div>
+            <div>${clues[roleKey] || 'Sin pista registrada.'}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleVerifyImageClick(e) {
+      const stage = document.getElementById('verify-image-stage');
+      const rect = stage.getBoundingClientRect();
+      state.verifyPoint = {
+        x: Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left) / rect.width) * 100))),
+        y: Math.max(0, Math.min(100, Math.round(((e.clientY - rect.top) / rect.height) * 100)))
+      };
+      const pin = document.getElementById('verify-pin');
+      pin.style.left = state.verifyPoint.x + '%';
+      pin.style.top = state.verifyPoint.y + '%';
+      pin.classList.remove('hidden');
+    }
+
+    async function submitVerification() {
+      const ch = state.challenges.find(c => c.id === state.selectedChallengeId);
+      if (!ch) return;
+
+      const attemptUrl = document.getElementById('attempt-url').value.trim();
+      const attemptKeyword = document.getElementById('attempt-keyword').value.trim();
+
+      if (!attemptUrl && !attemptKeyword) {
+        showToast('verify-feedback', '⚠️ Introduce la URL o la palabra clave del elemento.', '#e63946');
+        return;
+      }
+
+      try {
+        const res = await fetch('./api/?action=verifyAttempt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomCode: state.roomCode,
+            challengeId: ch.id,
+            attemptUrl,
+            attemptKeyword,
+            clickX: state.verifyPoint ? state.verifyPoint.x : null,
+            clickY: state.verifyPoint ? state.verifyPoint.y : null,
+            solverTeam: state.team,
+            solverName: state.playerName
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success) {
+            if (data.solved) {
+              showToast('verify-feedback', `🏆 ¡CORRECTO! +1 Punto para ${state.team === 'team-alpha' ? 'Equipo Alpha' : 'Equipo Beta'}.`, '#2a9d8f');
+              await syncRoomState();
+              return;
+            } else {
+              showToast('verify-feedback', data.hint || '❌ Respuesta incorrecta.', '#e63946');
+              return;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    function showToast(id, text, bg) {
+      const el = document.getElementById(id);
+      el.style.display = 'block';
+      el.style.backgroundColor = bg;
+      el.style.color = '#fff';
+      el.textContent = text;
+    }
+  </script>
+</body>
+</html>

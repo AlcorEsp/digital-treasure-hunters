@@ -1,0 +1,9 @@
+# Datos dinámicos de partidas en el servidor
+**/data_store.json
+data_store.json
+
+# Archivos de sistema y entorno
+.DS_Store
+Thumbs.db
+.env
+*.log

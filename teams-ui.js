@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   const teamManager = new TeamManager();
   await teamManager.init();
   
+  // Notificar que se visitó la página de equipos (objetivo del tutorial)
+  chrome.runtime.sendMessage({ action: 'teamPageVisited' }).catch(() => {});
+  
   // Referencias a elementos del DOM
   const currentTeamEl = document.getElementById('current-team');
   const teamMembersEl = document.getElementById('team-members');

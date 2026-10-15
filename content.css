@@ -188,8 +188,53 @@
   transition: width 0.5s ease;
 }
 
-.dth-progress-text {
-  font-size: 12px;
-  color: #666;
-  text-align: right;
+/* Modo Selección / Verificación de Objetivo (Alpha vs Beta) */
+.dth-target-CleanHover {
+  outline: 3px solid #e63946 !important;
+  background-color: rgba(230, 57, 70, 0.15) !important;
+  cursor: crosshair !important;
+  transition: outline 0.1s ease, background-color 0.1s ease;
 }
+
+.dth-verify-CleanHover {
+  outline: 3px solid #2a9d8f !important;
+  background-color: rgba(42, 157, 143, 0.15) !important;
+  cursor: pointer !important;
+  transition: outline 0.1s ease, background-color 0.1s ease;
+}
+
+.dth-mode-banner {
+  position: fixed;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #1d3557, #284b63);
+  color: #fff;
+  padding: 12px 22px;
+  border-radius: 30px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  z-index: 2147483646;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 2px solid #d9c2ad;
+}
+
+.dth-mode-banner button {
+  background: #e63946;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.dth-mode-banner button:hover {
+  background: #c1121f;
+}
+

@@ -19,6 +19,23 @@
     </header>
 
     <main>
+      <section id="versus-panel" class="panel versus-panel">
+        <div class="scoreboard-bar">
+          <button id="switch-alpha-btn" class="faction-pill alpha" title="Cambiar a Equipo Alpha">⚔️ ALPHA: <span id="score-alpha">0</span></button>
+          <span class="vs-label">VS</span>
+          <button id="switch-beta-btn" class="faction-pill beta" title="Cambiar a Equipo Beta">🛡️ BETA: <span id="score-beta">0</span></button>
+        </div>
+
+        <div class="versus-actions">
+          <button id="hide-target-btn" class="action-capture-btn">🎯 Esconder Objetivo aquí</button>
+          <button id="verify-target-btn" class="action-verify-btn">🕵️ ¡Lo encontré!</button>
+        </div>
+
+        <div id="rival-challenge-box" class="rival-challenge-box">
+          <p class="loading">Sincronizando objetivo rival...</p>
+        </div>
+      </section>
+
       <section id="mission-panel" class="panel">
         <h2>Misión Actual <a href="#" class="section-link" id="view-all-missions">Ver todas</a></h2>
         <div id="current-mission">
@@ -85,6 +102,8 @@
     </div>
   </div>
 
+  <script src="missions.js"></script>
+  <script src="teams.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

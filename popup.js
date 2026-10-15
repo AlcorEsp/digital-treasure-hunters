@@ -1,5 +1,5 @@
 // Script principal para el popup de la extensión
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   // Referencias a elementos del DOM
   const userInfoEl = document.getElementById('user-info');
   const currentMissionEl = document.getElementById('current-mission');
@@ -15,104 +15,248 @@ document.addEventListener('DOMContentLoaded', function() {
   const manageTeamsBtn = document.getElementById('manage-teams');
   const detachBtn = document.getElementById('detach-btn');
 
-  // Variables globales
+  // Referencias Modo Competitivo Alpha vs Beta
+  const switchAlphaBtn = document.getElementById('switch-alpha-btn');
+  const switchBetaBtn = document.getElementById('switch-beta-btn');
+  const scoreAlphaEl = document.getElementById('score-alpha');
+  const scoreBetaEl = document.getElementById('score-beta');
+  const hideTargetBtn = document.getElementById('hide-target-btn');
+  const verifyTargetBtn = document.getElementById('verify-target-btn');
+  const rivalChallengeBox = document.getElementById('rival-challenge-box');
+
+  // Gestores unificados
+  const missionManager = new MissionManager();
+  const teamManager = new TeamManager();
+
+  // Estado local en el popup
   let currentRole = null;
-  let currentTeam = [];
+  let currentTeamId = 'team-alpha';
+  let currentTeamMembers = [];
   let discoveredClues = [];
-  let currentMission = null;
+  let currentMissionDetails = null;
+  let userXp = 0;
+  let challenges = [];
+  let teamScores = { 'team-alpha': 0, 'team-beta': 0 };
+  let showAllRoleClues = false;
 
   // Inicialización
-  initializeApp();
+  await initializeApp();
+  // Intentar sincronizar retos en segundo plano desde forgeprojects.es
+  chrome.runtime.sendMessage({ action: 'syncChallenges' }).then(res => {
+    if (res && res.success) {
+      challenges = res.challenges || challenges;
+      teamScores = res.teamScores || teamScores;
+      updateVersusUI();
+    }
+  }).catch(() => {});
 
   // Función de inicialización
   async function initializeApp() {
-    const userData = await chrome.storage.local.get(['role', 'team', 'clues', 'mission']);
-    
-    // Comprobar si el usuario ya tiene un rol asignado
-    if (userData.role) {
-      currentRole = userData.role;
-      currentTeam = userData.team || [];
-      discoveredClues = userData.clues || [];
-      currentMission = userData.mission;
-      
-      // Actualizar la interfaz con los datos guardados
+    await missionManager.init();
+    await teamManager.init();
+
+    const storageData = await chrome.storage.local.get([
+      'user', 'role', 'clues', 'showRoleSelection', 'currentTeam', 'challenges', 'teamScores'
+    ]);
+
+    // Unificar lectura de rol, facción y pistas
+    currentRole = (storageData.user && storageData.user.role) || storageData.role || null;
+    currentTeamId = storageData.currentTeam || (storageData.user && storageData.user.team) || 'team-alpha';
+    if (currentTeamId !== 'team-alpha' && currentTeamId !== 'team-beta') {
+      currentTeamId = 'team-alpha';
+    }
+
+    userXp = (storageData.user && storageData.user.xp) || 0;
+    discoveredClues = (storageData.user && storageData.user.discoveredClues && storageData.user.discoveredClues.length > 0)
+      ? storageData.user.discoveredClues
+      : (storageData.clues || []);
+
+    challenges = storageData.challenges || [];
+    teamScores = storageData.teamScores || { 'team-alpha': 0, 'team-beta': 0 };
+
+    currentMissionDetails = missionManager.getCurrentMissionDetails();
+    currentTeamMembers = teamManager.getTeamMembers() || [];
+
+    // Comprobar si el usuario ya tiene un rol asignado y no pidió cambiarlo
+    if (currentRole && !storageData.showRoleSelection) {
       updateUI();
     } else {
-      // Si el usuario no tiene un rol, mostrar el modal de selección
+      if (storageData.showRoleSelection) {
+        await chrome.storage.local.set({ showRoleSelection: false });
+      }
       if (roleSelectionModal) {
         roleSelectionModal.classList.remove('hidden');
       }
+      updateUI();
+    }
+  }
+
+  // Obtener el reto activo que debemos buscar (plantado por el equipo contrario)
+  function getActiveRivalChallenge() {
+    const rivalTeamId = currentTeamId === 'team-alpha' ? 'team-beta' : 'team-alpha';
+    return challenges.find(c => c.status === 'active' && c.teamId === rivalTeamId) ||
+           challenges.find(c => c.status === 'active') || null;
+  }
+
+  // Actualizar el panel Alpha vs Beta
+  function updateVersusUI() {
+    if (scoreAlphaEl) scoreAlphaEl.textContent = teamScores['team-alpha'] || 0;
+    if (scoreBetaEl) scoreBetaEl.textContent = teamScores['team-beta'] || 0;
+
+    if (switchAlphaBtn && switchBetaBtn) {
+      switchAlphaBtn.classList.toggle('active-faction', currentTeamId === 'team-alpha');
+      switchBetaBtn.classList.toggle('active-faction', currentTeamId === 'team-beta');
+    }
+
+    if (!rivalChallengeBox) return;
+
+    const activeChallenge = getActiveRivalChallenge();
+    const myTeamLabel = currentTeamId === 'team-alpha' ? 'Equipo Alpha' : 'Equipo Beta';
+    const rivalTeamLabel = currentTeamId === 'team-alpha' ? 'Equipo Beta' : 'Equipo Alpha';
+
+    if (!activeChallenge) {
+      if (verifyTargetBtn) verifyTargetBtn.disabled = true;
+      rivalChallengeBox.innerHTML = `
+        <div style="text-align: center; color: #555; padding: 6px 0;">
+          <strong>Sin objetivos activos del ${rivalTeamLabel}.</strong>
+          <p style="font-size: 0.78rem; margin-top: 4px;">Navega a cualquier rincón de Internet y pulsa <strong>"🎯 Esconder Objetivo aquí"</strong> para que la IA genere pistas para el equipo rival.</p>
+        </div>
+      `;
+      return;
+    }
+
+    if (verifyTargetBtn) verifyTargetBtn.disabled = false;
+
+    const creatorTeamLabel = activeChallenge.teamId === 'team-alpha' ? 'Equipo Alpha' : 'Equipo Beta';
+    const isOwnTeamChallenge = activeChallenge.teamId === currentTeamId;
+    const roleKey = currentRole || 'decoder';
+    const myRoleClue = (activeChallenge.clues && activeChallenge.clues[roleKey]) || 'Escanea la red con tu equipo.';
+
+    const allCluesHtml = showAllRoleClues && activeChallenge.clues
+      ? Object.entries(activeChallenge.clues).map(([rKey, text]) => `
+          <div class="ai-clue-card" style="margin-top: 4px;">
+            <strong>${formatRoleIcon(rKey)} ${formatRoleName(rKey)}:</strong> ${text}
+          </div>
+        `).join('')
+      : `
+        <div class="ai-clue-card">
+          <strong>Pista IA para tu rol (${formatRoleIcon(roleKey)} ${formatRoleName(roleKey)}):</strong><br>
+          ${myRoleClue}
+        </div>
+      `;
+
+    rivalChallengeBox.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: bold; color: #1d3557;">
+          ${isOwnTeamChallenge ? `📌 Reto plantado por tu ${creatorTeamLabel}` : `🔥 Objetivo oculto por ${creatorTeamLabel}`}
+        </span>
+        <a href="#" id="toggle-all-role-clues" class="section-link">${showAllRoleClues ? 'Ver mi rol' : 'Dossier (5 roles)'}</a>
+      </div>
+      ${activeChallenge.screenshot ? `<img src="${activeChallenge.screenshot}" class="challenge-preview-img" alt="Captura del objetivo">` : ''}
+      ${allCluesHtml}
+    `;
+
+    const toggleLink = document.getElementById('toggle-all-role-clues');
+    if (toggleLink) {
+      toggleLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        showAllRoleClues = !showAllRoleClues;
+        updateVersusUI();
+      });
     }
   }
 
   // Actualizar la interfaz con los datos actuales
   function updateUI() {
+    updateVersusUI();
+
     // Actualizar la información del usuario
     if (userInfoEl) {
-      userInfoEl.innerHTML = `
-        <div class="user-role">
-          <span class="role-icon ${currentRole}"></span>
-          <span class="role-name">${formatRoleName(currentRole)}</span>
-        </div>
-      `;
+      if (currentRole) {
+        userInfoEl.innerHTML = `
+          <div class="user-role" title="Haz clic para cambiar de rol" style="cursor: pointer;">
+            <span class="role-name">${formatRoleIcon(currentRole)} ${formatRoleName(currentRole)}</span>
+            <span class="count-badge" style="margin-left: 6px;">${userXp} XP</span>
+          </div>
+        `;
+        const userRoleBadge = userInfoEl.querySelector('.user-role');
+        if (userRoleBadge) {
+          userRoleBadge.addEventListener('click', () => {
+            if (roleSelectionModal) {
+              roleSelectionModal.classList.remove('hidden');
+            }
+          });
+        }
+      } else {
+        userInfoEl.innerHTML = `<span class="role-name">Sin rol</span>`;
+      }
     }
-    
+
     // Actualizar la información de la misión actual
     if (currentMissionEl) {
-      if (currentMission) {
+      if (currentMissionDetails) {
+        const nextPendingObj = currentMissionDetails.objectives.find(obj => {
+          const objProg = currentMissionDetails.details && currentMissionDetails.details.objectives[obj.id];
+          return !objProg || !objProg.completed;
+        });
+
         currentMissionEl.innerHTML = `
-          <h3>${currentMission.title}</h3>
-          <p>${currentMission.description}</p>
-          <div class="mission-progress">
-            <div class="progress-bar">
-              <div class="progress" style="width: ${currentMission.progress}%"></div>
+          <h3>${currentMissionDetails.title}</h3>
+          <p>${currentMissionDetails.description}</p>
+          ${nextPendingObj ? `<p style="font-size: 0.85rem; color: #3c6e71; margin-top: 6px;"><strong>Objetivo actual:</strong> ${nextPendingObj.description}</p>` : ''}
+          <div class="mission-progress" style="margin-top: 8px;">
+            <div class="progress-bar" style="height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+              <div class="progress" style="width: ${currentMissionDetails.progress}%; height: 100%; background: #3c6e71;"></div>
             </div>
-            <span class="progress-text">${currentMission.progress}% completado</span>
+            <span class="progress-text" style="font-size: 0.8rem; color: #666;">${currentMissionDetails.progress}% completado (${currentMissionDetails.completedObjectives}/${currentMissionDetails.totalObjectives})</span>
           </div>
         `;
       } else {
         currentMissionEl.innerHTML = `
-          <p class="no-mission">No hay misiones activas. Visita la sección de misiones para comenzar.</p>
+          <p class="no-mission">No hay misiones activas. Visita la sección de misiones para elegir una.</p>
         `;
       }
     }
-    
+
     // Actualizar la lista de miembros del equipo
     if (teamMembersEl) {
-      if (currentTeam.length > 0) {
-        teamMembersEl.innerHTML = currentTeam.map(member => `
-          <div class="team-member">
-            <div class="avatar">${member.name.charAt(0)}</div>
-            <div class="member-info">
-              <div class="member-name">${member.name}</div>
+      const currentTeam = teamManager.getCurrentTeam();
+      if (currentTeam && currentTeamMembers.length > 0) {
+        teamMembersEl.innerHTML = `
+          <div style="font-size: 0.85rem; font-weight: bold; color: #284b63; margin-bottom: 6px;">${currentTeam.name}</div>
+          ${currentTeamMembers.map(member => `
+            <div class="team-member">
+              <div class="avatar">${member.name.charAt(0)}</div>
+              <div class="member-info">
+                <div class="member-name">${member.name}</div>
+              </div>
+              <div class="role-badge">${formatRoleName(member.role)}</div>
             </div>
-            <div class="role-badge">${formatRoleName(member.role)}</div>
-          </div>
-        `).join('');
+          `).join('')}
+        `;
       } else {
-        teamMembersEl.innerHTML = `<p class="no-team">No perteneces a ningún equipo todavía.</p>`;
+        teamMembersEl.innerHTML = `<p class="no-team">Facción activa: <strong>${currentTeamId === 'team-alpha' ? 'Equipo Alpha' : 'Equipo Beta'}</strong>. Entra en Gestionar para ver el escuadrón.</p>`;
       }
     }
-    
+
     // Actualizar la lista de pistas descubiertas
     if (discoveredCluesEl) {
       if (discoveredClues.length > 0) {
         discoveredCluesEl.innerHTML = discoveredClues.slice(0, 3).map(clue => `
           <div class="clue-item">
             <div class="clue-content">${clue.content}</div>
-            <div class="clue-source">Encontrado en: ${clue.source}</div>
-            <div class="clue-date">Descubierto: ${new Date(clue.timestamp).toLocaleString()}</div>
+            <div class="clue-source">Encontrado en: ${formatSourceUrl(clue.source)}</div>
+            <div class="clue-date" style="font-size: 0.75rem; color: #999;">Descubierto: ${new Date(clue.timestamp || clue.discoveredAt || Date.now()).toLocaleString()}</div>
           </div>
         `).join('');
-        
+
         if (discoveredClues.length > 3) {
           discoveredCluesEl.innerHTML += `
-            <div class="see-more-clues">
-              <a href="#" id="see-all-clues">Ver todas las pistas (${discoveredClues.length})</a>
+            <div class="see-more-clues" style="text-align: center; margin-top: 8px;">
+              <a href="#" id="see-all-clues" class="section-link">Ver todas las pistas (${discoveredClues.length})</a>
             </div>
           `;
-          
-          // Añadir event listener para ver todas las pistas
+
           setTimeout(() => {
             const seeAllCluesBtn = document.getElementById('see-all-clues');
             if (seeAllCluesBtn) {
@@ -120,15 +264,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }, 0);
         }
-        
-        // Actualizar contador de pistas
+
         if (clueCountEl) {
           clueCountEl.textContent = discoveredClues.length;
         }
       } else {
-        discoveredCluesEl.innerHTML = `<p class="no-clues">Aún no se han encontrado pistas.</p>`;
-        
-        // Actualizar contador de pistas
+        discoveredCluesEl.innerHTML = `<p class="no-clues">Aún no se han encontrado pistas. ¡Escanea una página web para empezar!</p>`;
         if (clueCountEl) {
           clueCountEl.textContent = '0';
         }
@@ -136,10 +277,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Formatear el nombre del rol para mostrar
+  function formatSourceUrl(url) {
+    if (!url) return 'Página web';
+    try {
+      return new URL(url).hostname;
+    } catch (e) {
+      return url;
+    }
+  }
+
+  function formatRoleIcon(role) {
+    const icons = {
+      'decoder': '🔎',
+      'translator': '🌐',
+      'visual-analyst': '👁️',
+      'historian': '📚',
+      'navigator': '🧭'
+    };
+    return icons[role] || '🕵️';
+  }
+
   function formatRoleName(role) {
-    if (!role) return '';
-    
+    if (!role) return 'Sin rol';
+
     const roleNames = {
       'decoder': 'Decodificador',
       'translator': 'Traductor',
@@ -147,40 +307,110 @@ document.addEventListener('DOMContentLoaded', function() {
       'historian': 'Historiador',
       'navigator': 'Navegador'
     };
-    
+
     return roleNames[role] || role;
   }
 
-  // Event Listeners
-  
+  // Cambiar facción Alpha / Beta rápidamente
+  async function selectFaction(teamId) {
+    currentTeamId = teamId;
+    await teamManager.joinTeam(teamId);
+    await chrome.runtime.sendMessage({ action: 'joinTeam', teamId });
+    await initializeApp();
+  }
+
+  if (switchAlphaBtn) {
+    switchAlphaBtn.addEventListener('click', () => selectFaction('team-alpha'));
+  }
+  if (switchBetaBtn) {
+    switchBetaBtn.addEventListener('click', () => selectFaction('team-beta'));
+  }
+
+  // Asegurar que content.js esté inyectado en la pestaña activa
+  async function sendToActiveTab(payload) {
+    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!activeTab || !activeTab.url || !activeTab.url.startsWith('http')) {
+      alert('Abre cualquier página web (http/https) para usar esta acción.');
+      return null;
+    }
+    try {
+      return await chrome.tabs.sendMessage(activeTab.id, payload);
+    } catch (err) {
+      await chrome.scripting.executeScript({
+        target: { tabId: activeTab.id },
+        files: ['content.js']
+      });
+      await chrome.scripting.insertCSS({
+        target: { tabId: activeTab.id },
+        files: ['content.css']
+      }).catch(() => {});
+      return await chrome.tabs.sendMessage(activeTab.id, payload);
+    }
+  }
+
+  // Botón: Esconder Objetivo en la página actual
+  if (hideTargetBtn) {
+    hideTargetBtn.addEventListener('click', async function() {
+      const res = await sendToActiveTab({
+        action: 'startCaptureTarget',
+        team: currentTeamId
+      });
+      if (res && res.success) {
+        window.close(); // Cerrar el popup para que el jugador haga clic cómodamente en la página
+      }
+    });
+  }
+
+  // Botón: Verificar / Reclamar Objetivo del equipo rival en la página actual
+  if (verifyTargetBtn) {
+    verifyTargetBtn.addEventListener('click', async function() {
+      const activeChallenge = getActiveRivalChallenge();
+      if (!activeChallenge) {
+        alert('No hay ningún objetivo activo para verificar.');
+        return;
+      }
+      const res = await sendToActiveTab({
+        action: 'startVerifyTarget',
+        challenge: activeChallenge
+      });
+      if (res && res.success) {
+        window.close(); // Cerrar el popup para que el jugador haga clic en el elemento de la página
+      }
+    });
+  }
+
   // Escanear la página actual
   if (scanPageBtn) {
     scanPageBtn.addEventListener('click', async function() {
+      if (!currentRole) {
+        if (roleSelectionModal) roleSelectionModal.classList.remove('hidden');
+        return;
+      }
+
       try {
-        // Obtener la pestaña activa
+        scanPageBtn.disabled = true;
+        scanPageBtn.textContent = 'Escaneando...';
+
         const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        
-        // Enviar mensaje al content script para escanear la página
-        chrome.tabs.sendMessage(activeTab.id, { action: 'scanPage', role: currentRole }, function(response) {
-          if (response && response.clues && response.clues.length > 0) {
-            // Añadir nuevas pistas al array
-            discoveredClues = [...discoveredClues, ...response.clues];
-            
-            // Guardar las pistas actualizadas
-            chrome.storage.local.set({ clues: discoveredClues });
-            
-            // Actualizar la interfaz con las nuevas pistas
-            updateUI();
-            
-            // Notificar al usuario
-            alert(`¡Se han encontrado ${response.clues.length} nuevas pistas!`);
-          } else {
-            alert('No se han encontrado pistas en esta página.');
-          }
-        });
+        const response = await sendToActiveTab({ action: 'scanPage', role: currentRole });
+
+        if (response && response.clues && response.clues.length > 0) {
+          await chrome.runtime.sendMessage({
+            action: 'cluesBatchDiscovered',
+            clues: response.clues,
+            currentUrl: activeTab.url
+          });
+
+          await initializeApp();
+          alert(`¡Escaneo completado! Se detectaron ${response.clues.length} pistas en esta página.`);
+        } else if (response) {
+          alert('No se han encontrado pistas para tu rol (' + formatRoleName(currentRole) + ') en esta página. Prueba en otra web o cambia de rol.');
+        }
       } catch (error) {
         console.error('Error al escanear la página:', error);
-        alert('Ha ocurrido un error al escanear la página.');
+      } finally {
+        scanPageBtn.disabled = false;
+        scanPageBtn.textContent = 'Escanear esta página';
       }
     });
   }
@@ -189,13 +419,8 @@ document.addEventListener('DOMContentLoaded', function() {
   if (roleCards && roleCards.length > 0) {
     roleCards.forEach(card => {
       card.addEventListener('click', function() {
-        // Eliminar la clase seleccionada de todas las tarjetas
         roleCards.forEach(c => c.classList.remove('selected'));
-        
-        // Añadir la clase seleccionada a la tarjeta actual
         this.classList.add('selected');
-        
-        // Guardar el rol seleccionado
         currentRole = this.dataset.role;
       });
     });
@@ -203,41 +428,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Confirmar la selección de rol
   if (confirmRoleBtn) {
-    confirmRoleBtn.addEventListener('click', function() {
+    confirmRoleBtn.addEventListener('click', async function() {
       if (currentRole) {
-        // Guardar el rol seleccionado
-        chrome.storage.local.set({ role: currentRole });
-        
-        // Ocultar el modal
+        await chrome.runtime.sendMessage({ action: 'roleSelected', role: currentRole });
+
         if (roleSelectionModal) {
           roleSelectionModal.classList.add('hidden');
         }
-        
-        // Actualizar la interfaz
-        updateUI();
-        
-        // Notificar al background script que se ha seleccionado un rol
-        chrome.runtime.sendMessage({ action: 'roleSelected', role: currentRole });
+
+        await initializeApp();
       } else {
         alert('Por favor, selecciona un rol para continuar.');
       }
     });
   }
 
-  // Botón de ajustes
+  // Botón de Portal Web / Control de Mando en ForgeProjects
   if (settingsBtn) {
+    settingsBtn.textContent = 'Control de Mando';
+    settingsBtn.title = 'Abrir Control de Mando en forgeprojects.es';
     settingsBtn.addEventListener('click', function() {
-      // Aquí se implementará la lógica para abrir el panel de ajustes
-      alert('Panel de ajustes (próximamente)');
+      chrome.tabs.create({ url: 'https://www.forgeprojects.es/digital-treasure-hunters/' });
     });
   }
-  
+
   // Botón para mantener el popup abierto
   if (detachBtn) {
     detachBtn.addEventListener('click', function() {
-      // Abre una ventana emergente con el contenido del popup
       const popupUrl = chrome.runtime.getURL('popup.html');
-      
+
       chrome.windows.create({
         url: popupUrl,
         type: 'popup',
@@ -245,8 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
         height: 650,
         focused: true
       });
-      
-      // Cerrar el popup actual
+
       window.close();
     });
   }
@@ -254,35 +472,37 @@ document.addEventListener('DOMContentLoaded', function() {
   // Función para mostrar todas las pistas
   function showAllClues(e) {
     if (e) e.preventDefault();
-    // En una implementación real, aquí se mostraría un modal o página con todas las pistas
-    alert('Próximamente: Vista de todas las pistas encontradas');
+    discoveredCluesEl.innerHTML = discoveredClues.map(clue => `
+      <div class="clue-item">
+        <div class="clue-content">${clue.content}</div>
+        <div class="clue-source">Encontrado en: ${formatSourceUrl(clue.source)}</div>
+        <div class="clue-date" style="font-size: 0.75rem; color: #999;">Descubierto: ${new Date(clue.timestamp || clue.discoveredAt || Date.now()).toLocaleString()}</div>
+      </div>
+    `).join('');
   }
-  
-  // Manejar navegación a la página de misiones
+
   function navigateToMissions(e) {
     if (e) e.preventDefault();
     window.location.href = chrome.runtime.getURL('missions.html');
   }
-  
-  // Manejar navegación a la página de equipos
-  function navigateToTeams(e) {
+
+  async function navigateToTeams(e) {
     if (e) e.preventDefault();
+    await chrome.runtime.sendMessage({ action: 'teamPageVisited' }).catch(() => {});
     window.location.href = chrome.runtime.getURL('teams.html');
   }
-  
-  // Registrar listeners de navegación
+
   if (viewAllMissionsBtn) {
     viewAllMissionsBtn.addEventListener('click', navigateToMissions);
   }
-  
+
   if (manageTeamsBtn) {
     manageTeamsBtn.addEventListener('click', navigateToTeams);
   }
 
-  // Detectar si estamos en modo ventana independiente
   const isDetached = window.outerHeight > 600;
   const closeWindowBtn = document.getElementById('close-window-btn');
-  
+
   if (isDetached && closeWindowBtn) {
     closeWindowBtn.style.display = 'flex';
     closeWindowBtn.addEventListener('click', function() {

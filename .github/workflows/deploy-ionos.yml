@@ -1,0 +1,34 @@
+name: Deploy to IONOS (forgeprojects.es)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Actualizar IONOS automáticamente
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Descargar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: ⚡ Actualizar IONOS vía Webhook de Auto-Deploy (deploy.php)
+        run: |
+          echo "Lanzando actualización automática en forgeprojects.es..."
+          curl -s -L "https://www.forgeprojects.es/digital-treasure-hunters/api/deploy.php" || true
+
+      - name: 🚀 Desplegar por SFTP/SSH (si están configurados los Secrets de IONOS)
+        if: ${{ secrets.IONOS_HOST != '' && secrets.IONOS_USERNAME != '' && secrets.IONOS_PASSWORD != '' }}
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.IONOS_HOST }}
+          username: ${{ secrets.IONOS_USERNAME }}
+          password: ${{ secrets.IONOS_PASSWORD }}
+          port: ${{ secrets.IONOS_PORT || 22 }}
+          source: "server-hub/*"
+          target: ${{ secrets.IONOS_TARGET_DIR || '/digital-treasure-hunters' }}
+          strip_components: 1
+          overwrite: true

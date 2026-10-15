@@ -12,15 +12,40 @@ class TeamManager {
   async init() {
     try {
       // Cargar datos guardados
-      const data = await chrome.storage.local.get(['currentTeam', 'availableTeams', 'pendingInvitations', 'teamMembers']);
+      const data = await chrome.storage.local.get(['currentTeam', 'availableTeams', 'pendingInvitations', 'teamMembers', 'user', 'role']);
       
       if (data.currentTeam) this.currentTeam = data.currentTeam;
-      if (data.availableTeams) this.availableTeams = data.availableTeams;
+      if (data.availableTeams && data.availableTeams.length > 0) {
+        this.availableTeams = data.availableTeams;
+      } else {
+        // Equipos iniciales por defecto
+        this.availableTeams = [
+          {
+            id: 'team-alpha',
+            name: 'Equipo Alpha',
+            description: 'Especialistas en criptografía y análisis visual en la red.',
+            createdAt: Date.now() - 86400000 * 3,
+            members: [
+              { id: 'npc_1', name: 'María', role: 'decoder', isLeader: true },
+              { id: 'npc_2', name: 'Carlos', role: 'visual-analyst', isLeader: false },
+              { id: 'npc_3', name: 'Elena', role: 'historian', isLeader: false }
+            ]
+          },
+          {
+            id: 'team-beta',
+            name: 'Equipo Beta',
+            description: 'Exploradores de rutas ocultas y textos antiguos.',
+            createdAt: Date.now() - 86400000 * 5,
+            members: [
+              { id: 'npc_4', name: 'Juan', role: 'navigator', isLeader: true },
+              { id: 'npc_5', name: 'Sofía', role: 'translator', isLeader: false }
+            ]
+          }
+        ];
+        await chrome.storage.local.set({ availableTeams: this.availableTeams });
+      }
       if (data.pendingInvitations) this.pendingInvitations = data.pendingInvitations;
       if (data.teamMembers) this.teamMembers = data.teamMembers;
-      
-      // En una implementación real, aquí también se conectaría a un servidor
-      // para obtener datos actualizados de los equipos
       
       return true;
     } catch (error) {
@@ -63,6 +88,9 @@ class TeamManager {
         teamMembers: this.teamMembers
       });
       
+      // Notificar al background script para actualizar objetivos de misión
+      chrome.runtime.sendMessage({ action: 'teamJoined', teamId: newTeam.id }).catch(() => {});
+      
       return newTeam;
     } catch (error) {
       console.error('Error al crear equipo:', error);
@@ -99,6 +127,9 @@ class TeamManager {
         currentTeam: this.currentTeam,
         teamMembers: this.teamMembers
       });
+      
+      // Notificar al background script para actualizar objetivos de misión
+      chrome.runtime.sendMessage({ action: 'teamJoined', teamId: teamId }).catch(() => {});
       
       return team;
     } catch (error) {
@@ -168,27 +199,27 @@ class TeamManager {
   // Obtener información del usuario actual
   async getUserInfo() {
     try {
-      const userData = await chrome.storage.local.get(['user']);
+      const userData = await chrome.storage.local.get(['user', 'role']);
+      const role = (userData.user && userData.user.role) || userData.role || null;
       
       if (!userData.user) {
-        // Usuario por defecto si no hay datos
         return {
-          id: 'user_' + Date.now(),
-          name: 'Usuario',
-          role: null
+          id: 'user_local',
+          name: 'Cazador',
+          role: role
         };
       }
       
       return {
-        id: userData.user.id || 'user_' + Date.now(),
-        name: userData.user.name || 'Usuario',
-        role: userData.user.role
+        id: userData.user.id || 'user_local',
+        name: userData.user.name || 'Cazador',
+        role: role
       };
     } catch (error) {
       console.error('Error al obtener info de usuario:', error);
       return {
-        id: 'user_' + Date.now(),
-        name: 'Usuario',
+        id: 'user_local',
+        name: 'Cazador',
         role: null
       };
     }
@@ -226,5 +257,6 @@ class TeamManager {
   }
 }
 
-// Exportar el gestor de equipos
-window.TeamManager = TeamManager;
+// Exportar el gestor de equipos (compatible con ventana y Service Worker)
+const teamGlobalScope = typeof self !== 'undefined' ? self : window;
+teamGlobalScope.TeamManager = TeamManager;
