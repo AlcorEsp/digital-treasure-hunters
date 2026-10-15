@@ -29,6 +29,11 @@ function createDefaultRoom(string $code, string $name = 'Partida Principal Forge
         'code' => $code,
         'name' => $name,
         'createdAt' => time() * 1000,
+        'matchStatus' => 'setup', // 'setup' (preparación) | 'hunting' (partida en curso) | 'finished'
+        'teamReady' => [
+            'team-alpha' => false,
+            'team-beta' => false
+        ],
         'teamScores' => [
             'team-alpha' => 0,
             'team-beta' => 0
@@ -277,14 +282,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
 
         recalculateRoomRoles($room, $ALL_ROLES);
+
+        // Asegurar estructura de estado de partida
+        if (!isset($room['teamReady']) || !is_array($room['teamReady'])) {
+            $room['teamReady'] = ['team-alpha' => false, 'team-beta' => false];
+        }
+        $hasAlphaChallenge = false;
+        $hasBetaChallenge = false;
+        foreach ($room['challenges'] ?? [] as $c) {
+            if (($c['teamId'] ?? '') === 'team-alpha' && ($c['status'] ?? 'active') === 'active') {
+                $hasAlphaChallenge = true;
+            }
+            if (($c['teamId'] ?? '') === 'team-beta' && ($c['status'] ?? 'active') === 'active') {
+                $hasBetaChallenge = true;
+            }
+        }
+        $teamHasChallenge = [
+            'team-alpha' => $hasAlphaChallenge,
+            'team-beta'  => $hasBetaChallenge
+        ];
+
+        // La partida empieza automáticamente cuando ambos equipos han subido su captura, rellenado los datos y confirmado equipos completos
+        if ($hasAlphaChallenge && $hasBetaChallenge && !empty($room['teamReady']['team-alpha']) && !empty($room['teamReady']['team-beta'])) {
+            $room['matchStatus'] = 'hunting';
+        } else {
+            $room['matchStatus'] = $room['matchStatus'] ?? 'setup';
+            if ($room['matchStatus'] === 'hunting' && (!$hasAlphaChallenge || !$hasBetaChallenge || empty($room['teamReady']['team-alpha']) || empty($room['teamReady']['team-beta']))) {
+                // Si aún no se cumplen las condiciones de inicio
+                $room['matchStatus'] = 'setup';
+            }
+        }
+
         file_put_contents($dataFile, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
 
-        // Ocultar URL exacta en retos activos para evitar trampas
-        $publicChallenges = array_map(function ($ch) {
+        // Ocultar URL exacta y usar captura difuminada en retos activos de rivales hasta que se acierte
+        $publicChallenges = array_map(function ($ch) use ($teamId) {
             $copy = $ch;
-            if (($ch['status'] ?? 'active') !== 'solved') {
+            $isSolved = (($copy['status'] ?? 'active') === 'solved');
+            $isOwnTeam = (($copy['teamId'] ?? '') === $teamId);
+
+            if (!$isSolved) {
                 unset($copy['url']);
+                if (!$isOwnTeam) {
+                    unset($copy['secretLabel']);
+                    unset($copy['targetPoint']);
+                    // Si existe versión difuminada (blurredScreenshot), enviarla en lugar de la original hasta que acierten
+                    if (!empty($copy['blurredScreenshot'])) {
+                        $copy['screenshot'] = $copy['blurredScreenshot'];
+                        $copy['isBlurred'] = true;
+                    }
+                }
             }
+            unset($copy['blurredScreenshot']);
             return $copy;
         }, array_slice($room['challenges'] ?? [], 0, 25));
 
@@ -295,6 +344,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'success' => true,
             'roomCode' => $roomCode,
             'roomName' => $room['name'] ?? $roomCode,
+            'matchStatus' => $room['matchStatus'],
+            'teamReady' => $room['teamReady'],
+            'teamHasChallenge' => $teamHasChallenge,
             'teamScores' => $room['teamScores'] ?? ['team-alpha' => 0, 'team-beta' => 0],
             'players' => array_values($room['players'] ?? []),
             'challenges' => $publicChallenges,
@@ -411,24 +463,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // 3. Crear un nuevo reto competitivo Alpha vs Beta en esta sala
+    // 3. Crear o actualizar el reto del equipo y marcar si el equipo está completo/listo
     if ($action === 'createChallenge' && !empty($input['challenge'])) {
         $ch = $input['challenge'];
         $ch['id'] = $ch['id'] ?? ('ch_' . round(microtime(true) * 1000));
         $ch['createdAt'] = time() * 1000;
         $ch['status'] = 'active';
         $ch['roomCode'] = $roomCode;
+        $teamOfChallenge = ($ch['teamId'] ?? 'team-alpha') === 'team-beta' ? 'team-beta' : 'team-alpha';
+        $ch['teamId'] = $teamOfChallenge;
+
+        // Reemplazar reto activo anterior de este mismo equipo en la ronda actual para mantener 1 objetivo activo por equipo
+        $room['challenges'] = array_values(array_filter($room['challenges'] ?? [], function ($existing) use ($teamOfChallenge) {
+            return !(($existing['teamId'] ?? '') === $teamOfChallenge && ($existing['status'] ?? 'active') === 'active');
+        }));
 
         array_unshift($room['challenges'], $ch);
         $room['challenges'] = array_slice($room['challenges'], 0, 25);
+
+        if (!isset($room['teamReady']) || !is_array($room['teamReady'])) {
+            $room['teamReady'] = ['team-alpha' => false, 'team-beta' => false];
+        }
+        if (!empty($input['teamReady'])) {
+            $room['teamReady'][$teamOfChallenge] = true;
+        }
+
+        // Comprobar si ambos equipos ya tienen captura + datos y han confirmado equipos completos
+        $hasAlpha = false;
+        $hasBeta  = false;
+        foreach ($room['challenges'] as $c) {
+            if (($c['teamId'] ?? '') === 'team-alpha' && ($c['status'] ?? 'active') === 'active') $hasAlpha = true;
+            if (($c['teamId'] ?? '') === 'team-beta' && ($c['status'] ?? 'active') === 'active') $hasBeta = true;
+        }
+        if ($hasAlpha && $hasBeta && !empty($room['teamReady']['team-alpha']) && !empty($room['teamReady']['team-beta'])) {
+            $room['matchStatus'] = 'hunting';
+        } else {
+            $room['matchStatus'] = 'setup';
+        }
+
         file_put_contents($dataFile, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
 
-        echo json_encode(['success' => true, 'challenge' => $ch, 'teamScores' => $room['teamScores']]);
+        echo json_encode([
+            'success' => true,
+            'challenge' => $ch,
+            'matchStatus' => $room['matchStatus'],
+            'teamReady' => $room['teamReady'],
+            'teamScores' => $room['teamScores']
+        ]);
+        exit;
+    }
+
+    // 3b. Confirmar / cambiar estado de "Equipo Completo y Listo" o iniciar nueva ronda
+    if ($action === 'setTeamReady') {
+        $teamId = ($input['teamId'] ?? 'team-alpha') === 'team-beta' ? 'team-beta' : 'team-alpha';
+        $ready = isset($input['ready']) ? (bool)$input['ready'] : true;
+        if (!isset($room['teamReady']) || !is_array($room['teamReady'])) {
+            $room['teamReady'] = ['team-alpha' => false, 'team-beta' => false];
+        }
+        $room['teamReady'][$teamId] = $ready;
+
+        $hasAlpha = false;
+        $hasBeta  = false;
+        foreach ($room['challenges'] ?? [] as $c) {
+            if (($c['teamId'] ?? '') === 'team-alpha' && ($c['status'] ?? 'active') === 'active') $hasAlpha = true;
+            if (($c['teamId'] ?? '') === 'team-beta' && ($c['status'] ?? 'active') === 'active') $hasBeta = true;
+        }
+        if ($hasAlpha && $hasBeta && !empty($room['teamReady']['team-alpha']) && !empty($room['teamReady']['team-beta'])) {
+            $room['matchStatus'] = 'hunting';
+        } else {
+            $room['matchStatus'] = 'setup';
+        }
+
+        file_put_contents($dataFile, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+
+        echo json_encode([
+            'success' => true,
+            'matchStatus' => $room['matchStatus'],
+            'teamReady' => $room['teamReady']
+        ]);
+        exit;
+    }
+
+    if ($action === 'newRound') {
+        $room['matchStatus'] = 'setup';
+        $room['teamReady'] = ['team-alpha' => false, 'team-beta' => false];
+        $room['challenges'] = [];
+        file_put_contents($dataFile, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+        echo json_encode(['success' => true, 'matchStatus' => 'setup', 'teamReady' => $room['teamReady']]);
         exit;
     }
 
     // 4. Verificar intento de resolución (URL + punto en la captura o palabra clave)
     if ($action === 'verifyAttempt' && !empty($input['challengeId'])) {
+        if (($room['matchStatus'] ?? 'setup') !== 'hunting') {
+            echo json_encode([
+                'success' => false,
+                'error' => '⏳ La partida aún no ha comenzado. Ambos equipos deben subir su captura, rellenar los datos y confirmar que los equipos están completos.'
+            ]);
+            exit;
+        }
         $challengeId = $input['challengeId'];
         $attemptUrl = strtolower(trim($input['attemptUrl'] ?? ''));
         $attemptKeyword = mb_strtolower(trim($input['attemptKeyword'] ?? ''));
