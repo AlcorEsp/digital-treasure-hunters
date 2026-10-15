@@ -18,7 +18,22 @@ jobs:
       - name: ⚡ Actualizar IONOS vía Webhook de Auto-Deploy (deploy.php)
         run: |
           echo "Lanzando actualización automática en forgeprojects.es..."
-          curl -s -L "https://www.forgeprojects.es/digital-treasure-hunters/api/deploy.php" || true
+          python3 -c '
+          import json, urllib.request
+          files = {}
+          for path in ["server-hub/index.html", "server-hub/api/index.php", "server-hub/api/deploy.php"]:
+              with open(path, "r", encoding="utf-8") as f:
+                  files[path] = f.read()
+          payload = json.dumps({"files": files}).encode("utf-8")
+          req = urllib.request.Request(
+              "https://www.forgeprojects.es/digital-treasure-hunters/api/deploy.php",
+              data=payload,
+              headers={"Content-Type": "application/json", "User-Agent": "GitHub-Actions-Deploy/1.0"},
+              method="POST"
+          )
+          with urllib.request.urlopen(req, timeout=20) as resp:
+              print(resp.read().decode("utf-8"))
+          ' || curl -s -L "https://www.forgeprojects.es/digital-treasure-hunters/api/deploy.php" || true
 
       - name: 🚀 Desplegar por SFTP/SSH (si están configurados los Secrets de IONOS)
         if: ${{ secrets.IONOS_HOST != '' && secrets.IONOS_USERNAME != '' && secrets.IONOS_PASSWORD != '' }}

@@ -21,20 +21,56 @@ $filesToSync = [
     'server-hub/api/deploy.php' => __DIR__ . '/deploy.php'
 ];
 
+$updated = [];
+$errors  = [];
+
+// Modo 1: Recibir archivos enviados directamente por POST JSON (útil para repositorios privados desde GitHub Actions o script local)
+$rawInput = file_get_contents('php://input');
+$postData = $rawInput ? json_decode($rawInput, true) : null;
+
+if (is_array($postData) && !empty($postData['files']) && is_array($postData['files'])) {
+    foreach ($filesToSync as $repoPath => $localDest) {
+        if (isset($postData['files'][$repoPath]) && strlen($postData['files'][$repoPath]) > 50) {
+            $dir = dirname($localDest);
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0755, true);
+            }
+            if (@file_put_contents($localDest, $postData['files'][$repoPath], LOCK_EX) !== false) {
+                $updated[] = $repoPath . ' (vía POST)';
+            } else {
+                $errors[] = "No se pudo escribir en: {$localDest}";
+            }
+        }
+    }
+    echo json_encode([
+        'success'    => empty($errors) && !empty($updated),
+        'mode'       => 'direct-post',
+        'timestamp'  => date('c'),
+        'repository' => "{$repoOwner}/{$repoName} ({$branch})",
+        'updated'    => $updated,
+        'errors'     => $errors
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// Modo 2: Descargar desde GitHub (soporta token opcional por ?token= o Header para repos privados)
+$token = isset($_GET['token']) ? trim($_GET['token']) : '';
+$headers = "User-Agent: ForgeProjects-IONOS-AutoDeploy/1.0\r\nCache-Control: no-cache\r\n";
+if ($token !== '') {
+    $headers .= "Authorization: token {$token}\r\n";
+}
+
 $ctx = stream_context_create([
     'http' => [
         'method'  => 'GET',
-        'timeout' => 10,
-        'header'  => "User-Agent: ForgeProjects-IONOS-AutoDeploy/1.0\r\nCache-Control: no-cache\r\n"
+        'timeout' => 15,
+        'header'  => $headers
     ],
     'ssl' => [
         'verify_peer'      => false,
         'verify_peer_name' => false
     ]
 ]);
-
-$updated = [];
-$errors  = [];
 
 foreach ($filesToSync as $repoPath => $localDest) {
     $rawUrl = "https://raw.githubusercontent.com/{$repoOwner}/{$repoName}/{$branch}/{$repoPath}?t=" . time();
@@ -51,7 +87,7 @@ foreach ($filesToSync as $repoPath => $localDest) {
             $errors[] = "No se pudo escribir en: {$localDest}";
         }
     } else {
-        $errors[] = "No se pudo descargar desde GitHub: {$repoPath}";
+        $errors[] = "No se pudo descargar desde GitHub: {$repoPath} (verifica si el repositorio es Público o pasa ?token=TU_PAT)";
     }
 }
 
