@@ -1465,16 +1465,20 @@
               </div>
 
               <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.12);">
-                <div class="form-group">
-                  <label for="attempt-url">🌐 Paso 2: URL o dominio de la página web:</label>
-                  <input type="text" id="attempt-url" placeholder="Ej: https://es.wikipedia.org/wiki/Apolo_11">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:10px; background:rgba(42,157,143,0.12); border:1px solid rgba(42,157,143,0.45); padding:8px 12px; border-radius:8px; font-size:0.8rem;">
+                  <span style="color:#80ed99; font-weight:800;">🏆 Sistema de Puntos (puedes rellenar una o ambas):</span>
+                  <span>🌐 Acertar URL = <strong style="color:#80ed99;">+10 Puntos</strong> · 🔑 Solo Elemento Oculto = <strong style="color:#f4a261;">+4 Puntos</strong></span>
                 </div>
                 <div class="form-group">
-                  <label for="attempt-keyword">🔑 O palabra clave / nombre del elemento oculto:</label>
-                  <input type="text" id="attempt-keyword" placeholder="Ej: Módulo Eagle">
+                  <label for="attempt-url">🌐 Opción A (10 Puntos): URL de la página web (o + Elemento Oculto):</label>
+                  <input type="text" id="attempt-url" placeholder="Ej: https://es.wikipedia.org/wiki/Faro_de_Alejandria">
+                </div>
+                <div class="form-group">
+                  <label for="attempt-keyword">🔑 Opción B (4 Puntos si no sabes la URL): Elemento oculto / Palabra clave:</label>
+                  <input type="text" id="attempt-keyword" placeholder="Ej: Reliquia 1492 / Faro / Módulo">
                 </div>
                 <button class="btn btn-success" onclick="submitVerification()">
-                  🏆 ¡Lo Encontré! Reclamar Punto para mi Equipo
+                  🏆 ¡Resolver Captura! Reclamar Puntos (+10 pts con URL / +4 pts con Elemento)
                 </button>
                 <div id="verify-feedback" class="status-toast"></div>
               </div>
@@ -2732,6 +2736,41 @@
       pin.style.top = state.hidePoint.y + '%';
     }
 
+    function sanitizeClueText(text, forbiddenTerms) {
+      if (!text) return '';
+      let out = text;
+      forbiddenTerms.forEach(term => {
+        const clean = (term || '').trim();
+        if (clean.length >= 4) {
+          const escaped = clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const rx = new RegExp(escaped, 'gi');
+          out = out.replace(rx, '[***]');
+        }
+      });
+      return out;
+    }
+
+    function extractEnglishClueWords(title, secretLabel, extraContext) {
+      const combined = `${title} ${secretLabel} ${extraContext}`.toLowerCase();
+      const map = [
+        { rx: /faro|luz|torre|mar|isla|alejandr|puerto|costa/, words: ['"Beacon"', '"Ancient"', '"Harbor"', '"Tower"'] },
+        { rx: /apolo|luna|espacio|cohete|eagle|misi[oó]n|nasa|astronauta/, words: ['"Lunar"', '"Landing"', '"Craft"', '"Wings"'] },
+        { rx: /coliseo|roma|gladiador|anfiteatro|imperio|arena/, words: ['"Arena"', '"Empire"', '"Stone"', '"Arches"'] },
+        { rx: /eiffel|par[ií]s|hierro|francia|exposi/, words: ['"Iron"', '"Lattice"', '"Skyline"', '"Spire"'] },
+        { rx: /machu|inca|andes|monta[nñ]a|per[uú]|ciudadela/, words: ['"Summit"', '"Andean"', '"Citadel"', '"Clouds"'] },
+        { rx: /pir[aá]mide|egipto|fara[oó]n|giza|esfinge/, words: ['"Desert"', '"Tomb"', '"Limestone"', '"Dynasty"'] },
+        { rx: /castillo|medieval|fortaleza|muralla|rey/, words: ['"Fortress"', '"Crown"', '"Rampart"', '"Century"'] }
+      ];
+      for (const item of map) {
+        if (item.rx.test(combined)) {
+          return item.words;
+        }
+      }
+      const wordCount = secretLabel.trim().split(/\s+/).length;
+      const firstChar = (secretLabel.trim()[0] || 'X').toUpperCase();
+      return ['"Hidden"', '"Relic"', '"Emblem"', `"Starts-with-${firstChar}" (${wordCount} palabra/s)`];
+    }
+
     function buildFallbackClues(meta, secretLabel, extraContext) {
       let host = 'wikipedia.org';
       let path = '/';
@@ -2745,37 +2784,56 @@
       const mainDomain = hostParts[0] || host;
       const tld = hostParts.slice(1).join('.') || 'org';
       const b64 = btoa(unescape(encodeURIComponent(mainDomain)));
-      const years = (meta.years && meta.years.length > 0) ? meta.years.join(', ') : 'época histórica';
+      const years = (meta.years && meta.years.length > 0) ? meta.years.slice(0, 2).join(' / ') : 'una época histórica clave';
+
+      const engWords = extractEnglishClueWords(meta.pageTitle || '', secretLabel || '', extraContext || '');
+      const horizZone = state.hidePoint.x < 35 ? 'el tercio izquierdo' : (state.hidePoint.x > 65 ? 'el tercio derecho' : 'la franja central');
+      const vertZone = state.hidePoint.y < 35 ? 'la parte superior' : (state.hidePoint.y > 65 ? 'la parte inferior' : 'a media altura');
+      const pathDepth = path.split('/').filter(Boolean).length;
 
       return {
-        'decoder': `Código Base64 del portal objetivo: "${b64}". Descífralo para obtener el nombre del sitio web.`,
-        'navigator': `El objetivo se aloja en un dominio terminado en ".${tld}" con ${path.split('/').filter(Boolean).length} nivel(es) en su ruta.`,
-        'historian': `Contexto de la página: "${(meta.pageTitle || secretLabel).substring(0, 55)}". Fechas detectadas: ${years}. ${extraContext}`,
-        'translator': `Idioma del documento: "${meta.lang || 'es'}". El elemento oculto consta de ${secretLabel.split(/\s+/).length} palabra(s) y empieza por "${secretLabel.substring(0, 4)}...".`,
-        'visual-analyst': `En la captura, apunta a las coordenadas (${state.hidePoint.x}% horizontal, ${state.hidePoint.y}% vertical) donde se ve "${secretLabel.substring(0, 22)}...".`
+        'decoder': `Pista Criptográfica: Hemos interceptado en Base64 la raíz del portal web: "${b64}". Descífralo en tu estación sin revelar aún de qué artículo se trata.`,
+        'navigator': `Rumbo de Red: El tesoro se esconde en un portal de extensión ".${tld}" con ${pathDepth} nivel(es) en su ruta. Es un sitio de consulta cuyos artículos se organizan por entradas temáticas.`,
+        'historian': `Enigma Histórico (sin nombres propios): Se trata de una estructura o hito vinculado a ${years}. Contexto indirecto: edificada como guía o símbolo de su civilización junto al agua o en un enclave estratégico.`,
+        'translator': `Indicios en Inglés: Si traduces y unes estas 4 palabras clave en inglés tendrás la imagen mental de lo que buscamos: ${engWords.join(' + ')}. Además, el elemento oculto tiene ${secretLabel.trim().split(/\s+/).length} palabra(s).`,
+        'visual-analyst': `Inspección de silueta: En la captura difuminada, dirige la mira hacia ${horizZone}, en ${vertZone} (aprox. ${state.hidePoint.x}% X, ${state.hidePoint.y}% Y), donde destaca un bloque de color contrastado.`
       };
     }
 
     async function generateFreeAIClues(meta, secretLabel, extraContext) {
       const fallback = buildFallbackClues(meta, secretLabel, extraContext);
+      const forbiddenWords = [
+        secretLabel,
+        meta.pageTitle,
+        ...(secretLabel || '').split(/\s+/).filter(w => w.length >= 5),
+        ...((meta.pageTitle || '').replace(/[-–|].*$/, '').trim().split(/\s+/).filter(w => w.length >= 5))
+      ];
+
       try {
-        const prompt = `Eres el Director de Juego de "Digital Treasure Hunters". Un equipo escondió un elemento en una captura web y el equipo rival debe encontrar la web y señalar el punto.
-Datos reales:
+        const prompt = `Eres el Diseñador de Acertijos de "Digital Treasure Hunters".
+Un equipo ha escondido un objetivo en una captura web y los cazadores deben deducirlo combinando 5 pistas sutiles.
+
+REGLA DE ORO (MUY IMPORTANTE):
+- ¡PROHIBIDO revelar el nombre propio exacto del monumento, lugar o el texto literal del elemento oculto!
+- Por ejemplo: si es el "Faro de Alejandría", puedes dar a entender que es una torre que guía barcos o un faro antiguo en una isla mediterránea, pero NUNCA digas "Alejandría" ni "Faro de Alejandría".
+- La pista de "translator" DEBE dar entre 3 y 4 palabras sueltas en INGLÉS (por ejemplo: "Beacon", "Harbor", "Ancient", "Island") que al juntarlas y traducirlas den indicios de qué trata la imagen o el elemento oculto, sin decir el nombre propio.
+- La pista de "visual-analyst" NO debe decir el texto escrito en la imagen, solo la zona (izquierda/derecha/centro, arriba/abajo) y formas o colores.
+
+Datos reales (SOLO PARA TI, NO LOS COPIES LITERALMENTE):
 - URL: ${meta.url}
 - Dominio: ${meta.hostname}
-- Título: ${meta.pageTitle}
-- Encabezados: ${(meta.headings || []).join(' | ')}
-- Fechas: ${(meta.years || []).join(', ')}
-- Objeto marcado: "${secretLabel}" (en ${state.hidePoint.x}% X, ${state.hidePoint.y}% Y)
-- Notas: "${extraContext}"
+- Título de la página (NO MENCIONAR LITERALMENTE): ${meta.pageTitle}
+- Fechas en la página: ${(meta.years || []).join(', ')}
+- Elemento oculto (NO MENCIONAR LITERALMENTE): "${secretLabel}" (situado en ${state.hidePoint.x}% X, ${state.hidePoint.y}% Y)
+- Contexto: "${extraContext}"
 
-Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal completa):
+Devuelve SOLO un JSON válido en español con estas 5 claves:
 {
-  "decoder": "Pista con palabra clave del dominio o ruta en Base64 o cifrado César",
-  "navigator": "Pista sobre el tipo de sitio web, extensión de dominio y ruta",
-  "historian": "Pista sobre la historia, fechas o temática de esa página",
-  "translator": "Pista lingüística traduciendo el concepto clave a otro idioma",
-  "visual-analyst": "Pista visual indicando en qué zona de la captura fijarse y qué forma buscar"
+  "decoder": "Pista con el nombre del portal o una pista indirecta cifrada en Base64 entre comillas dobles",
+  "navigator": "Pista sutil sobre el tipo de sitio web, su extensión (.org, .com...) y cómo llegar sin decir el título del artículo",
+  "historian": "Acertijo histórico/temático hablando de la época, función o categoría del lugar/objeto, pero SIN decir su nombre propio ni ciudad exacta",
+  "translator": "3 o 4 palabras clave en INGLÉS entre comillas que al juntarlas describan los elementos de la imagen o el concepto oculto",
+  "visual-analyst": "Indicación visual de en qué zona de la captura hacer clic (${state.hidePoint.x}% X, ${state.hidePoint.y}% Y) describiendo solo formas y colores sin leer el texto"
 }`;
 
         const res = await fetch('https://text.pollinations.ai/', {
@@ -2783,7 +2841,7 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: [
-              { role: 'system', content: 'Responde únicamente con un JSON válido con las claves decoder, navigator, historian, translator, visual-analyst.' },
+              { role: 'system', content: 'Responde únicamente con un JSON válido con las claves decoder, navigator, historian, translator, visual-analyst. Nunca escribas el nombre propio de la respuesta dentro de las pistas.' },
               { role: 'user', content: prompt }
             ],
             model: 'openai',
@@ -2797,11 +2855,11 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
           if (match) {
             const parsed = JSON.parse(match[0]);
             return {
-              'decoder': parsed.decoder || fallback['decoder'],
-              'navigator': parsed.navigator || fallback['navigator'],
-              'historian': parsed.historian || fallback['historian'],
-              'translator': parsed.translator || fallback['translator'],
-              'visual-analyst': parsed['visual-analyst'] || parsed.visualAnalyst || fallback['visual-analyst']
+              'decoder': sanitizeClueText(parsed.decoder, forbiddenWords) || fallback['decoder'],
+              'navigator': sanitizeClueText(parsed.navigator, forbiddenWords) || fallback['navigator'],
+              'historian': sanitizeClueText(parsed.historian, forbiddenWords) || fallback['historian'],
+              'translator': sanitizeClueText(parsed.translator, forbiddenWords) || fallback['translator'],
+              'visual-analyst': sanitizeClueText(parsed['visual-analyst'] || parsed.visualAnalyst, forbiddenWords) || fallback['visual-analyst']
             };
           }
         }
@@ -3220,10 +3278,12 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
           const data = await res.json();
           if (data && data.success) {
             if (data.solved) {
+              const pts = data.awardedPoints || 10;
+              const typeLbl = data.solveTypeLabel || `¡Acierto (+${pts} Puntos)!`;
               const msg = data.matchWon
-                ? (data.message || `🏆🎉 ¡VICTORIA! ${TEAM_NAMES[state.team]} ha adivinado las capturas de todos los equipos y GANA LA PARTIDA!`)
-                : (data.message || `🎯 ¡Captura rival adivinada! (${data.solvedCountForTeam}/${data.neededToWin} completadas para ganar).`);
-              showToast('verify-feedback', msg, '#2a9d8f');
+                ? `🏆🎉 ¡PARTIDA FINALIZADA! ${typeLbl} — ¡${TEAM_NAMES[state.team]} ha completado todas las capturas rivales y GANA con ${data.teamScores ? data.teamScores[state.team] : pts} puntos!`
+                : `🎯 ${typeLbl} (${data.solvedCountForTeam}/${data.neededToWin} capturas rivales completadas para ganar).`;
+              showToast('verify-feedback', msg, pts === 10 ? '#2a9d8f' : '#e76f51');
               await syncRoomState();
               return;
             } else {

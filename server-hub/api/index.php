@@ -1091,44 +1091,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $coordMatches = false;
         if ($targetPoint && $clickX !== null && $clickY !== null) {
             $dist = hypot($clickX - floatval($targetPoint['x']), $clickY - floatval($targetPoint['y']));
-            $coordMatches = ($dist <= 18.0);
+            $coordMatches = ($dist <= 22.0);
         } elseif (!$targetPoint) {
             $coordMatches = true;
         }
 
         $targetSecret = mb_strtolower(trim($target['secretLabel'] ?? ''));
-        $keywordMatches = ($targetSecret !== '' && $attemptKeyword !== '' && (
-            mb_strpos($targetSecret, $attemptKeyword) !== false ||
-            mb_strpos($attemptKeyword, $targetSecret) !== false
-        ));
+        $targetTitle = mb_strtolower(trim($target['pageTitle'] ?? ''));
+        $keywordMatches = false;
+        if ($attemptKeyword !== '' && mb_strlen($attemptKeyword) >= 3) {
+            if ($targetSecret !== '' && (mb_strpos($targetSecret, $attemptKeyword) !== false || mb_strpos($attemptKeyword, $targetSecret) !== false)) {
+                $keywordMatches = true;
+            } elseif ($targetTitle !== '' && (mb_strpos($targetTitle, $attemptKeyword) !== false || mb_strpos($attemptKeyword, $targetTitle) !== false)) {
+                $keywordMatches = true;
+            }
+        }
 
+        // Sistema de Puntuación por Nivel de Acierto:
+        // - Acertar la URL (sola o junto con el elemento oculto): 10 Puntos
+        // - Acertar solo el elemento oculto / palabra clave (sin acertar la URL): 4 Puntos
+        // Con cualquiera de las dos opciones se da por resuelta la captura rival y se puede ganar la partida.
         if (!$urlMatches && !$keywordMatches) {
             echo json_encode([
                 'success' => true,
                 'solved' => false,
-                'hint' => '❌ La URL o dominio no coincide con el lugar donde se tomó la captura. Consulta por el chat o voz con el Decodificador y el Navegador de tu equipo.'
+                'hint' => '❌ Ni la URL ni el elemento oculto coinciden. Combinad las pistas en inglés del Traductor, el enigma del Historiador y el código del Decodificador.'
             ]);
             exit;
         }
 
-        if ($urlMatches && !$coordMatches && !$keywordMatches) {
-            echo json_encode([
-                'success' => true,
-                'solved' => false,
-                'partialUrlMatch' => true,
-                'hint' => '⚠️ ¡Acertaste la web! Pero no marcaste el punto exacto en la captura ni la palabra clave. Pregunta al Analista Visual de tu equipo.'
-            ]);
-            exit;
+        $awardedPoints = $urlMatches ? 10 : 4;
+        if ($urlMatches && $keywordMatches) {
+            $solveTypeLabel = '🎯 ¡PLENO TOTAL (URL + Elemento Oculto)! +10 Puntos';
+        } elseif ($urlMatches) {
+            $solveTypeLabel = '🌐 ¡URL Exacta Acertada! +10 Puntos';
+        } else {
+            $solveTypeLabel = '🔑 ¡Elemento Oculto Acertado (sin URL)! +4 Puntos';
         }
 
         if (!isset($target['solvedByTeams']) || !is_array($target['solvedByTeams'])) {
             $target['solvedByTeams'] = [];
+        }
+        if (!isset($target['pointsByTeam']) || !is_array($target['pointsByTeam'])) {
+            $target['pointsByTeam'] = [];
         }
 
         $alreadySolvedByThisTeam = in_array($solverTeam, $target['solvedByTeams'], true);
 
         if (!$alreadySolvedByThisTeam) {
             $target['solvedByTeams'][] = $solverTeam;
+            $target['pointsByTeam'][$solverTeam] = $awardedPoints;
             $target['solvedAt'] = time() * 1000;
             $target['solvedByTeam'] = $solverTeam;
             $target['solvedByName'] = $solverName;
@@ -1136,7 +1148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!isset($room['teamScores'][$solverTeam])) {
                 $room['teamScores'][$solverTeam] = 0;
             }
-            $room['teamScores'][$solverTeam]++;
+            $room['teamScores'][$solverTeam] += $awardedPoints;
 
             // Actualizar estadísticas del jugador y del equipo
             if ($solverId !== '' && isset($store['users'][$solverId])) {
@@ -1183,8 +1195,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $winLabel = $GLOBALS['TEAM_LABELS'][$solverTeam] ?? $solverTeam;
             $msgText = $teamWonMatch
-                ? "🏆🎉 ¡VICTORIA TOTAL! {$solverName} ha descifrado la última captura rival ({$solvedRivalCount}/{$neededToWin}). ¡{$winLabel} GANA LA PARTIDA!"
-                : "🎯 ¡{$solverName} ha descifrado la captura de un equipo rival! Progreso de victoria: {$solvedRivalCount}/{$neededToWin} capturas rivales completadas.";
+                ? "🏆🎉 ¡PARTIDA FINALIZADA! {$solverName} logró: {$solveTypeLabel} ({$solvedRivalCount}/{$neededToWin} capturas). ¡{$winLabel} GANA LA PARTIDA con {$room['teamScores'][$solverTeam]} pts!"
+                : "🎯 {$solverName} logró: {$solveTypeLabel}. Progreso de victoria: {$solvedRivalCount}/{$neededToWin} capturas rivales completadas.";
 
             $room['chats'][$solverTeam][] = [
                 'id' => 'msg_win_' . round(microtime(true) * 1000),
@@ -1201,10 +1213,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode([
             'success' => true,
             'solved' => true,
+            'awardedPoints' => $awardedPoints,
+            'urlMatched' => $urlMatches,
+            'keywordMatched' => $keywordMatches,
+            'solveTypeLabel' => $solveTypeLabel,
             'matchWon' => $teamWonMatch ?? false,
             'solvedCountForTeam' => $solvedRivalCount ?? 1,
             'neededToWin' => $neededToWin ?? 1,
-            'message' => $msgText ?? '¡Captura rival descifrada!',
+            'message' => $msgText ?? $solveTypeLabel,
             'matchStatus' => $room['matchStatus'],
             'winnerTeam' => $room['winnerTeam'],
             'teamScores' => $room['teamScores'],
