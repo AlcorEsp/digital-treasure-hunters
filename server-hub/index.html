@@ -1209,6 +1209,15 @@
           <input type="text" id="create-room-name-input" placeholder="Déjalo vacío para asignar un nombre por defecto y publicarla en Partidas Abiertas...">
         </div>
 
+        <div class="form-group">
+          <label for="create-room-time-select">⏱️ Tiempo límite máximo para adivinar las capturas (Cuenta atrás de partida):</label>
+          <select id="create-room-time-select" style="width:100%; padding:10px 12px; border-radius:8px; background:var(--bg-dark); border:1px solid rgba(255,255,255,0.22); color:#fff; font-size:0.95rem;">
+            <option value="180">⚡ 3 Minutos (Partida Relámpago)</option>
+            <option value="300" selected>🔥 5 Minutos (Tiempo Estándar Recomendado)</option>
+            <option value="420">🧭 7 Minutos (Investigación Profunda)</option>
+          </select>
+        </div>
+
         <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px;">
           <label style="font-size: 0.83rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" id="create-room-private-chk" style="width: 17px; height: 17px;">
@@ -1313,15 +1322,20 @@
     </div>
   </header>
 
-  <!-- 2. BARRA DE JUGADOR Y ROL PRINCIPAL -->
+  <!-- 2. BARRA DE JUGADOR, OK INDIVIDUAL Y ROLES ASIGNADOS AUTOMÁTICAMENTE -->
   <section class="player-bar">
-    <div class="player-name-box">
-      <label for="player-name" style="font-size: 0.82rem; color: var(--accent); font-weight: 700;">👤 Tu Nombre:</label>
-      <input type="text" id="player-name" value="Agente" placeholder="Tu alias">
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <div class="player-name-box">
+        <label for="player-name" style="font-size: 0.82rem; color: var(--accent); font-weight: 700;">👤 Tu Alias:</label>
+        <input type="text" id="player-name" value="Agente" placeholder="Tu alias">
+      </div>
+      <button type="button" class="mini-btn" id="btn-my-player-ready" style="background: #f4a261; color: #111; font-weight: 900; padding: 7px 14px;" onclick="toggleMyPlayerReady()">
+        ✋ Dar mi OK: ¡Estoy Listo!
+      </button>
     </div>
 
     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-      <span style="font-size: 0.8rem; color: var(--text-muted);">Elige tu Rol Principal (los colores naranjas son roles extra asignados si sois menos de 5):</span>
+      <span style="font-size: 0.78rem; color: var(--text-muted);">🎲 Tus Roles Asignados (se reparten automáticamente en la cuenta atrás):</span>
       <div class="roles-strip" id="roles-strip">
         <button class="role-pill preferred" data-role="decoder" onclick="setPreferredRole('decoder')">🔎 Decodificador</button>
         <button class="role-pill" data-role="navigator" onclick="setPreferredRole('navigator')">🧭 Navegador</button>
@@ -1346,23 +1360,39 @@
 
       <!-- ZONA IZQUIERDA: JUEGO (CAZAR / ESCONDER) -->
       <div>
-        <!-- BANNER DE ESTADO DE PARTIDA: PREPARACIÓN DE EQUIPOS Y CAPTURAS -->
+        <!-- BANNER ESPECIAL DE CUENTA ATRÁS Y SORTEO AUTOMÁTICO DE ROLES -->
+        <div id="countdown-banner-box" class="hidden" style="background: linear-gradient(135deg, rgba(230,57,70,0.3), rgba(244,162,97,0.28)); border: 2px solid #f4a261; border-radius: 14px; padding: 18px; margin-bottom: 14px; text-align: center; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
+          <div style="font-size: 0.85rem; font-weight: 800; color: #f4a261; letter-spacing: 1px;">🎲 ¡TODOS LOS JUGADORES Y EQUIPOS HAN DADO EL OK!</div>
+          <div id="countdown-big-number" style="font-size: 3.2rem; font-weight: 900; color: #fff; margin: 6px 0; text-shadow: 0 0 20px rgba(244,162,97,0.8);">5</div>
+          <div id="countdown-role-reveal" style="font-size: 1rem; color: #80ed99; font-weight: 800;">
+            Sorteando y repartiendo automáticamente los 5 roles secretos...
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+            Recuerda: ¡Solo tú recibirás la pista de tu rol asignado! Comunícate con tu equipo antes de que acabe el tiempo.
+          </div>
+        </div>
+
+        <!-- BANNER DE ESTADO DE PARTIDA: PREPARACIÓN DE EQUIPOS, RELOJ LÍMITE Y CAPTURAS -->
         <div class="match-phase-bar" id="match-phase-bar">
-          <div>
+          <div style="flex: 1;">
             <div id="match-phase-title" style="font-weight: 800; font-size: 0.96rem; color: #f4a261;">
-              ⏳ FASE DE PREPARACIÓN: Ambos equipos deben subir su captura, rellenar datos y confirmar equipo completo
+              ⏳ FASE DE PREPARACIÓN: Ambos equipos deben subir su captura y cada jugador dar su OK de listo
             </div>
             <div id="match-phase-subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
-              La caza comenzará automáticamente cuando Alpha y Beta hayan subido su objetivo y marcado equipo listo.
+              Al estar todos listos comenzará la cuenta atrás, se repartirán los roles automáticamente y tendréis 5 minutos para ganar.
             </div>
           </div>
           <div class="readiness-pills">
+            <!-- RELOJ DIGITAL DE LA PARTIDA (Ej. 05:00) -->
+            <div id="match-timer-badge" class="hidden" style="background: rgba(15, 25, 35, 0.95); border: 2px solid #2a9d8f; padding: 6px 14px; border-radius: 10px; font-family: monospace; font-size: 1.35rem; font-weight: 900; color: #80ed99; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 15px rgba(42,157,143,0.4);">
+              ⏱️ <span id="match-timer-text">05:00</span>
+            </div>
             <div id="dynamic-readiness-pills" style="display:flex; flex-wrap:wrap; gap:6px;">
               <span class="ready-pill" id="pill-alpha-status">⚔️ Alpha: ⏳ Pendiente</span>
               <span class="ready-pill" id="pill-beta-status">🛡️ Beta: ⏳ Pendiente</span>
             </div>
             <button type="button" class="mini-btn" id="btn-toggle-team-ready" style="background: #2a9d8f;" onclick="toggleMyTeamReady()">
-              ✅ Confirmar Mi Equipo Completo y Listo
+              ✅ Confirmar Equipo Completo y Listo
             </button>
             <button type="button" class="mini-btn hidden" id="btn-new-round" style="background: var(--secondary);" onclick="startNewRound()">
               🔄 Nueva Ronda
@@ -1396,9 +1426,9 @@
             </div>
 
             <div id="challenge-detail-box" class="hidden">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
                 <h2 id="detail-title">Objetivo Misterioso</h2>
-                <button class="role-pill" id="toggle-all-clues-btn" onclick="toggleAllClues()">Mostrar los 5 roles</button>
+                <span class="badge solved" id="exclusive-role-badge">🎲 Pista Exclusiva de tu Rol</span>
               </div>
 
               <p id="step1-instruction-label" style="font-size: 0.82rem; color: var(--accent); margin-bottom: 4px;">
@@ -1408,16 +1438,30 @@
                 <img id="detail-screenshot" src="" alt="Captura del reto" class="blurred-hunt-img">
                 <div id="blur-lock-overlay" class="blur-overlay-badge">
                   <div class="lock-title">🔒 CAPTURA RIVAL DIFUMINADA</div>
-                  <div class="lock-sub">Los cazadores no pueden ver la foto nítida del otro equipo hasta acertar el reto. Usa las pistas de tus roles y haz clic en la zona indicada.</div>
+                  <div class="lock-sub">Los cazadores no pueden ver la foto nítida del otro equipo hasta acertar el reto. Usa la pista exclusiva de tu rol y coordínate con tus compañeros antes de que se agote el reloj.</div>
                 </div>
                 <div id="verify-pin" class="target-pin verify-pin hidden" style="z-index: 6;">🎯</div>
               </div>
 
               <div style="margin-top: 14px;">
                 <h3 style="font-size: 0.95rem; color: var(--accent); margin-bottom: 6px;">
-                  🧩 Tus Pistas Desbloqueadas (según tus roles en el equipo)
+                  🧩 Tu Misión y Pista Exclusiva de Rol (los demás roles solo los ven tus compañeros)
                 </h3>
                 <div id="detail-clues-container"></div>
+              </div>
+
+              <!-- ESTACIÓN DE TRABAJO INTERACTIVA SEGÚN EL ROL DEL JUGADOR -->
+              <div id="role-workbench-box" style="margin-top: 12px; background: rgba(15, 25, 35, 0.85); border: 1px solid rgba(168, 218, 220, 0.35); border-radius: 10px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <strong style="color: #80ed99; font-size: 0.86rem;" id="workbench-title">🛠️ Estación de Trabajo de tu Rol</strong>
+                  <span style="font-size: 0.74rem; color: var(--text-muted);">Analiza tu pista y envíala al equipo</span>
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+                  <input type="text" id="workbench-input" placeholder="Pega aquí un código Base64 para descifrar o escribe tu deducción de esta pista..." style="flex: 1; padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: var(--bg-card); color: #fff; font-size: 0.84rem;">
+                  <button type="button" class="mini-btn" style="background: var(--secondary);" onclick="runRoleToolDecode()">🔎 Descifrar Base64</button>
+                  <button type="button" class="mini-btn" style="background: #2a9d8f;" onclick="sendRoleFindingToTeamChat()">📤 Enviar Hallazgo al Equipo</button>
+                </div>
+                <div id="workbench-output" style="font-size: 0.8rem; color: #f4a261; min-height: 18px;"></div>
               </div>
 
               <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.12);">
@@ -1605,6 +1649,14 @@
       players: [],
       challenges: [],
       matchStatus: 'setup',
+      timeLimitSeconds: 300,
+      countdownEndsAt: null,
+      huntStartedAt: null,
+      huntEndsAt: null,
+      finishReason: null,
+      serverOffsetMs: 0,
+      roleHolders: {},
+      myPlayerReady: false,
       teamReady: { 'team-alpha': false, 'team-beta': false, 'team-gamma': false, 'team-delta': false },
       teamHasChallenge: { 'team-alpha': false, 'team-beta': false, 'team-gamma': false, 'team-delta': false },
       teamScores: { 'team-alpha': 0, 'team-beta': 0, 'team-gamma': 0, 'team-delta': 0 },
@@ -1617,7 +1669,8 @@
       verifyPoint: null,
       playedAudioIds: new Set(),
       initialChatLoaded: false,
-      autoSwitchedToHunt: false
+      autoSwitchedToHunt: false,
+      triggeredZeroSync: false
     };
 
     // Grabadora de voz Walkie-Talkie
@@ -1658,14 +1711,17 @@
         returnToMainLobby(false);
       }
 
-      // Sincronización periódica cada 3.5 segundos
+      // Sincronización periódica cada 3 segundos
       setInterval(() => {
         if (state.inLobby) {
           fetchLobbyData();
         } else {
           syncRoomState();
         }
-      }, 3500);
+      }, 3000);
+
+      // Reloj en tiempo real (cada 250ms) para la cuenta atrás de arranque (5s) y el cronómetro de partida (ej. 5:00 min)
+      setInterval(tickLiveMatchTimers, 250);
 
       // Soporte para pegar capturas con Ctrl+V
       window.addEventListener('paste', handleClipboardPaste);
@@ -1849,6 +1905,8 @@
     async function createNewGameFromLobby() {
       const customName = document.getElementById('create-room-name-input').value.trim();
       const isPrivate = document.getElementById('create-room-private-chk').checked;
+      const timeSelect = document.getElementById('create-room-time-select');
+      const timeLimitSeconds = timeSelect ? (parseInt(timeSelect.value, 10) || 300) : 300;
 
       try {
         const res = await fetch('./api/?action=createRoom', {
@@ -1857,7 +1915,8 @@
           body: JSON.stringify({
             maxTeams: state.createMaxTeams,
             roomName: customName,
-            isPrivate: isPrivate
+            isPrivate: isPrivate,
+            timeLimitSeconds: timeLimitSeconds
           })
         });
         if (res.ok) {
@@ -2049,9 +2108,18 @@
         if (res.ok) {
           const data = await res.json();
           if (data && data.success) {
+            if (data.serverNowMs) {
+              state.serverOffsetMs = data.serverNowMs - Date.now();
+            }
             state.roomCode = data.roomCode || state.roomCode;
             state.roomName = data.roomName || state.roomCode;
             state.maxTeams = (data.maxTeams === 4) ? 4 : 2;
+            state.timeLimitSeconds = data.timeLimitSeconds || 300;
+            state.countdownEndsAt = data.countdownEndsAt || null;
+            state.huntStartedAt = data.huntStartedAt || null;
+            state.huntEndsAt = data.huntEndsAt || null;
+            state.finishReason = data.finishReason || null;
+            state.roleHolders = data.roleHolders || {};
             state.winnerTeam = data.winnerTeam || null;
             state.players = data.players || [];
             state.teamScores = data.teamScores || { 'team-alpha': 0, 'team-beta': 0, 'team-gamma': 0, 'team-delta': 0 };
@@ -2059,8 +2127,13 @@
             state.teamReady = data.teamReady || { 'team-alpha': false, 'team-beta': false };
             state.teamHasChallenge = data.teamHasChallenge || { 'team-alpha': false, 'team-beta': false };
 
+            if (state.matchStatus === 'hunting' || state.matchStatus === 'setup') {
+              state.triggeredZeroSync = false;
+            }
+
+            const minsLimit = Math.round(state.timeLimitSeconds / 60);
             document.getElementById('header-room-title').textContent = state.roomName;
-            document.getElementById('header-room-subtitle').textContent = `Sala ${state.roomCode} · Modo ${state.maxTeams} Equipos (Gana el primero en adivinar las ${state.maxTeams - 1} capturas rivales)`;
+            document.getElementById('header-room-subtitle').textContent = `Sala ${state.roomCode} · Modo ${state.maxTeams} Equipos · ⏱️ Límite ${minsLimit} min (Gana el primero en adivinar las ${state.maxTeams - 1} capturas rivales)`;
             document.getElementById('room-code-input').value = state.roomCode;
             document.getElementById('current-room-label').textContent = state.roomName;
             document.getElementById('hide-room-label').textContent = state.roomName;
@@ -2068,8 +2141,12 @@
             updateTeamThemeUI();
 
             const me = state.players.find(p => p.id === state.playerId);
-            if (me && Array.isArray(me.assignedRoles) && me.assignedRoles.length > 0) {
-              state.assignedRoles = me.assignedRoles;
+            if (me) {
+              state.myPlayerReady = !!me.isReady;
+              if (Array.isArray(me.assignedRoles) && me.assignedRoles.length > 0) {
+                state.assignedRoles = me.assignedRoles;
+                state.preferredRole = me.assignedRoles[0];
+              }
             } else {
               computeLocalRoleAssignment();
             }
@@ -2081,6 +2158,11 @@
             if (state.matchStatus === 'setup' && !state.teamHasChallenge[state.team] && !state.autoSwitchedToHunt) {
               switchMode('hide');
               state.autoSwitchedToHunt = true;
+            }
+
+            // Si empieza la cuenta atrás o la caza, cambiar automáticamente a Modo Caza para ver el reto
+            if (state.matchStatus === 'countdown' || state.matchStatus === 'hunting') {
+              switchMode('hunt');
             }
 
             // Seleccionar preferentemente un reto de un equipo rival aún no resuelto por mi equipo
@@ -2111,9 +2193,77 @@
             renderSquadAndRolesBar();
             renderChallengesList();
             renderSelectedChallenge();
+            tickLiveMatchTimers();
           }
         }
       } catch (e) {}
+    }
+
+    function formatMMSS(totalSeconds) {
+      const s = Math.max(0, Math.floor(totalSeconds));
+      const mm = String(Math.floor(s / 60)).padStart(2, '0');
+      const ss = String(s % 60).padStart(2, '0');
+      return `${mm}:${ss}`;
+    }
+
+    function tickLiveMatchTimers() {
+      if (state.inLobby) return;
+      const nowServerMs = Date.now() + (state.serverOffsetMs || 0);
+      const cdBox = document.getElementById('countdown-banner-box');
+      const cdNum = document.getElementById('countdown-big-number');
+      const cdRole = document.getElementById('countdown-role-reveal');
+      const timerBadge = document.getElementById('match-timer-badge');
+      const timerText = document.getElementById('match-timer-text');
+
+      // 1. Cuenta atrás de arranque de 5 segundos y sorteo de roles
+      if (state.matchStatus === 'countdown' && state.countdownEndsAt) {
+        cdBox.classList.remove('hidden');
+        const remSec = Math.ceil((state.countdownEndsAt - nowServerMs) / 1000);
+        const myRolesText = state.assignedRoles.map(r => ROLE_NAMES[r]).join(' + ');
+        cdRole.textContent = `🎲 Rol asignado automáticamente a ti: ${myRolesText}`;
+
+        if (remSec > 0) {
+          cdNum.textContent = remSec;
+        } else {
+          cdNum.textContent = '¡A CAZAR!';
+          if (!state.triggeredZeroSync) {
+            state.triggeredZeroSync = true;
+            syncRoomState();
+          }
+        }
+      } else {
+        cdBox.classList.add('hidden');
+      }
+
+      // 2. Reloj de cuenta atrás de la partida (ej. 05:00 minutos)
+      if ((state.matchStatus === 'hunting' || state.matchStatus === 'countdown') && state.huntEndsAt) {
+        timerBadge.classList.remove('hidden');
+        const remHuntSec = Math.max(0, Math.ceil((state.huntEndsAt - nowServerMs) / 1000));
+        timerText.textContent = formatMMSS(remHuntSec);
+
+        if (remHuntSec <= 30) {
+          timerBadge.style.borderColor = '#e63946';
+          timerBadge.style.color = '#ff6b6b';
+        } else if (remHuntSec <= 90) {
+          timerBadge.style.borderColor = '#f4a261';
+          timerBadge.style.color = '#f4a261';
+        } else {
+          timerBadge.style.borderColor = '#2a9d8f';
+          timerBadge.style.color = '#80ed99';
+        }
+
+        if (state.matchStatus === 'hunting' && remHuntSec <= 0 && !state.triggeredZeroSync) {
+          state.triggeredZeroSync = true;
+          syncRoomState();
+        }
+      } else if (state.matchStatus === 'finished') {
+        timerBadge.classList.remove('hidden');
+        timerText.textContent = '00:00';
+        timerBadge.style.borderColor = '#f4a261';
+        timerBadge.style.color = '#f4a261';
+      } else {
+        timerBadge.classList.add('hidden');
+      }
     }
 
     function renderMatchPhaseBanner() {
@@ -2134,7 +2284,7 @@
         const solvedByThisTeam = state.challenges.filter(c => c.teamId !== tKey && Array.isArray(c.solvedByTeams) && c.solvedByTeams.includes(tKey)).length;
         return `
           <span class="ready-pill ${complete ? 'done' : ''}">
-            ${TEAM_SHORT[tKey]}: ${capOk ? '📸 Captura OK' : '⏳ Sin Captura'} · ${rdyOk ? '✅ Listo' : '⏳ Pendiente'}
+            ${TEAM_SHORT[tKey]}: ${capOk ? '📸 Captura OK' : '⏳ Sin Captura'} · ${rdyOk ? '✅ OK Listo' : '⏳ Falta OK'}
             ${state.matchStatus !== 'setup' ? ` · 🎯 ${solvedByThisTeam}/${neededRivals}` : ''}
           </span>
         `;
@@ -2142,35 +2292,64 @@
 
       const myTeamReady = !!state.teamReady[state.team];
       const myTeamCap = !!state.teamHasChallenge[state.team];
+      const minsLimit = Math.round((state.timeLimitSeconds || 300) / 60);
 
-      if (state.matchStatus === 'finished' && state.winnerTeam) {
+      if (state.matchStatus === 'finished') {
         bar.classList.add('hunting-live');
         title.style.color = '#f4a261';
-        title.textContent = `🏆🎉 ¡PARTIDA FINALIZADA! ${TEAM_NAMES[state.winnerTeam] || state.winnerTeam} HA ADIVINADO LAS CAPTURAS DE TODOS LOS EQUIPOS Y GANA LA PARTIDA`;
-        sub.textContent = 'Todas las capturas han quedado desbloqueadas. Pulsa en "🔄 Nueva Ronda" para jugar otra partida en esta sala.';
+        if (state.finishReason === 'timeout' && state.winnerTeam === 'timeout') {
+          title.textContent = `⏱️ ¡TIEMPO AGOTADO (${minsLimit} MINUTOS)! Ningún equipo logró completar todas las capturas a tiempo`;
+        } else if (state.finishReason === 'timeout' && state.winnerTeam) {
+          title.textContent = `⏱️🏆 ¡TIEMPO AGOTADO! Gana ${TEAM_NAMES[state.winnerTeam] || state.winnerTeam} por mayor número de capturas rivales resueltas`;
+        } else {
+          title.textContent = `🏆🎉 ¡PARTIDA FINALIZADA! ${TEAM_NAMES[state.winnerTeam] || state.winnerTeam} HA ADIVINADO LAS CAPTURAS DE TODOS LOS EQUIPOS Y GANA LA PARTIDA`;
+        }
+        sub.textContent = 'Todas las capturas han quedado desbloqueadas. Pulsa en "🔄 Nueva Ronda" para jugar otra partida con nuevo reparto de roles.';
         btnReady.classList.add('hidden');
         btnNewRound.classList.remove('hidden');
+      } else if (state.matchStatus === 'countdown') {
+        bar.classList.add('hunting-live');
+        title.style.color = '#f4a261';
+        title.textContent = `🎲 ¡CUENTA ATRÁS EN MARCHA! Repartiendo roles automáticamente entre los miembros de cada equipo...`;
+        sub.textContent = `Prepárate: solo tú recibirás la pista de tu rol asignado y tendréis ${minsLimit} minutos en el reloj para resolver las ${neededRivals} capturas rivales.`;
+        btnReady.classList.add('hidden');
+        btnNewRound.classList.add('hidden');
       } else if (state.matchStatus === 'hunting') {
         bar.classList.add('hunting-live');
         title.style.color = '#80ed99';
-        title.textContent = `🔥 ¡PARTIDA EN CURSO (${state.maxTeams} EQUIPOS)! Todos los equipos han subido su captura`;
-        sub.textContent = `Hay que adivinar la captura de todos los demás equipos (${neededRivals} captura/s rival/es). ¡El primer equipo que complete todas gana!`;
+        title.textContent = `🔥 ¡CAZA EN CURSO (${state.maxTeams} EQUIPOS)! Centrate en la pista exclusiva de tu rol y compártela con tu equipo`;
+        sub.textContent = `Tenéis ${minsLimit} minutos máximo en el reloj para adivinar las ${neededRivals} captura(s) rival(es). ¡El primer equipo que complete todas gana!`;
         btnReady.classList.add('hidden');
         btnNewRound.classList.remove('hidden');
       } else {
         bar.classList.remove('hunting-live');
         title.style.color = '#f4a261';
-        title.textContent = `⏳ FASE DE PREPARACIÓN (${state.maxTeams} EQUIPOS): La partida empieza cuando los ${state.maxTeams} equipos hayan completado su captura y confirmado equipo listo`;
+        title.textContent = `⏳ FASE DE PREPARACIÓN (${state.maxTeams} EQUIPOS): Subid la captura del equipo y que cada jugador pulse "✋ Dar mi OK: ¡Estoy Listo!"`;
         sub.textContent = myTeamCap
-          ? (myTeamReady ? `✅ Tu equipo (${TEAM_SHORT[state.team]}) ya está listo. Esperando a que el resto de los ${state.maxTeams} equipos completen su captura...` : '⚠️ Ya subisteis captura: pulsa el botón verde para confirmar que vuestro equipo está completo.')
-          : '👉 Ve a "🎯 MODO ESCONDER", sube la captura de tu equipo, rellena los datos y confirma equipo listo.';
+          ? (myTeamReady ? `✅ Tu equipo (${TEAM_SHORT[state.team]}) ya dio el OK. Esperando al resto de los ${state.maxTeams} equipos para lanzar la cuenta atrás y repartir roles...` : '⚠️ Ya subisteis captura: dad el OK individual o confirma equipo completo para iniciar la cuenta atrás.')
+          : '👉 Paso 1: Ve a "🎯 MODO ESCONDER" y sube la captura de tu equipo. Paso 2: Cada jugador da el OK de listo.';
         btnReady.classList.remove('hidden');
         btnNewRound.classList.add('hidden');
         btnReady.style.background = myTeamReady ? '#e63946' : '#2a9d8f';
         btnReady.textContent = myTeamReady
           ? '🔓 Desmarcar Equipo Listo'
-          : '✅ Confirmar Mi Equipo Completo y Listo';
+          : '✅ Confirmar Equipo Completo y Listo';
       }
+    }
+
+    async function toggleMyPlayerReady() {
+      const nextReady = !state.myPlayerReady;
+      state.myPlayerReady = nextReady;
+      await fetch('./api/?action=setPlayerReady', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode: state.roomCode,
+          playerId: state.playerId,
+          ready: nextReady
+        })
+      }).catch(() => {});
+      await syncRoomState();
     }
 
     async function toggleMyTeamReady() {
@@ -2201,11 +2380,26 @@
       }).catch(() => {});
       state.selectedChallengeId = null;
       state.autoSwitchedToHunt = false;
+      state.triggeredZeroSync = false;
       await syncRoomState();
     }
 
     function renderSquadAndRolesBar() {
-      // 1. Píldoras de roles arriba: marcar el rol preferido y en naranja los roles adicionales que te tocaron
+      // Actualizar botón de OK individual del jugador
+      const btnMyReady = document.getElementById('btn-my-player-ready');
+      if (btnMyReady) {
+        if (state.myPlayerReady) {
+          btnMyReady.style.background = '#2a9d8f';
+          btnMyReady.style.color = '#fff';
+          btnMyReady.textContent = '✅ ¡Estoy Listo! (OK Confirmado)';
+        } else {
+          btnMyReady.style.background = '#f4a261';
+          btnMyReady.style.color = '#111';
+          btnMyReady.textContent = '✋ Dar mi OK: ¡Estoy Listo!';
+        }
+      }
+
+      // 1. Píldoras de roles arriba: marcar los roles asignados a este jugador
       document.querySelectorAll('#roles-strip .role-pill').forEach(btn => {
         const r = btn.dataset.role;
         const isPref = (r === state.preferredRole);
@@ -2214,29 +2408,31 @@
         btn.classList.toggle('assigned-extra', !isPref && isAssigned);
       });
 
-      // 2. Lista de miembros de mi equipo y rivales en esta sala
+      // 2. Lista de miembros de mi equipo con su estado de OK individual
       const myTeamPlayers = state.players.filter(p => p.team === state.team);
       const rivalPlayers = state.players.filter(p => p.team !== state.team);
       const myTeamFull = TEAM_NAMES[state.team] || '⚔️ Equipo Alpha';
+      const readyCount = myTeamPlayers.filter(p => p.isReady).length;
 
       const listEl = document.getElementById('squad-members-list');
       if (myTeamPlayers.length === 0) {
-        listEl.innerHTML = `<span>Conectado en solitario (ocupas los 5 roles de tu equipo)</span>`;
+        listEl.innerHTML = `<span>Conectado en solitario (recibirás los 5 roles de tu equipo)</span>`;
       } else {
         listEl.innerHTML = `
-          <strong style="color: var(--accent);">Miembros en tu ${myTeamFull} (${myTeamPlayers.length}):</strong>
+          <strong style="color: var(--accent);">Tu ${myTeamFull} (${readyCount}/${myTeamPlayers.length} dieron OK):</strong>
           ${myTeamPlayers.map(p => {
             const rolesIcons = (p.assignedRoles || [p.preferredRole]).map(r => ROLE_NAMES[r].split(' ')[0]).join('');
+            const okBadge = p.isReady ? '✅ OK' : '⏳ Falta OK';
             return `<span class="member-chip ${p.id === state.playerId ? 'me' : ''}">
-              🟢 ${p.name} <span title="Roles asignados">${rolesIcons} (${(p.assignedRoles || []).length} rol/es)</span>
+              ${okBadge} <strong>${p.name}</strong> <span title="Roles asignados">${rolesIcons}</span>
             </span>`;
           }).join('')}
-          <span style="color: var(--text-muted); margin-left: 8px;">| Rivales en la sala: ${rivalPlayers.length}</span>
+          <span style="color: var(--text-muted); margin-left: 8px;">| Rivales en sala: ${rivalPlayers.length}</span>
         `;
       }
 
       const summaryEl = document.getElementById('my-assigned-roles-summary');
-      summaryEl.textContent = `Tus roles en esta partida (${state.assignedRoles.length}/5): ` +
+      summaryEl.textContent = `🎲 Tu(s) rol(es) exclusivo(s) (${state.assignedRoles.length}/5): ` +
         state.assignedRoles.map(r => ROLE_NAMES[r]).join(', ');
     }
 
@@ -2796,14 +2992,6 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
       renderSelectedChallenge();
     }
 
-    function toggleAllClues() {
-      state.showAllClues = !state.showAllClues;
-      document.getElementById('toggle-all-clues-btn').textContent = state.showAllClues
-        ? 'Ver solo mis roles asignados'
-        : 'Mostrar los 5 roles';
-      renderSelectedChallenge();
-    }
-
     function renderSelectedChallenge() {
       const ch = state.challenges.find(c => c.id === state.selectedChallengeId);
       const emptyBox = document.getElementById('no-challenge-selected');
@@ -2825,6 +3013,16 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
       document.getElementById('detail-title').textContent = isSolvedForMyTeam
         ? `✅ Captura Desbloqueada (${teamName}): ${ch.secretLabel || ch.pageTitle}`
         : (isOwnTeamChallenge ? `🛡️ Captura oculta por tu ${teamName}` : `🔥 Objetivo plantado por ${teamName}`);
+
+      const roleBadge = document.getElementById('exclusive-role-badge');
+      if (roleBadge) {
+        roleBadge.textContent = `🎲 Tu Rol: ${state.assignedRoles.map(r => ROLE_NAMES[r]).join(' + ')}`;
+      }
+
+      const wbTitle = document.getElementById('workbench-title');
+      if (wbTitle) {
+        wbTitle.textContent = `🛠️ Estación de Trabajo — ${state.assignedRoles.map(r => ROLE_NAMES[r]).join(' / ')}`;
+      }
 
       const screenshotEl = document.getElementById('detail-screenshot');
       const blurOverlayEl = document.getElementById('blur-lock-overlay');
@@ -2851,15 +3049,20 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
 
       const cluesContainer = document.getElementById('detail-clues-container');
 
-      // Si la partida aún está en fase de preparación ('setup'), no revelar las pistas rivales todavía
-      if (state.matchStatus === 'setup' && !isOwnTeamChallenge && !isSolvedForMyTeam) {
+      // Si la partida aún está en fase de preparación ('setup') o en la cuenta atrás ('countdown'), no revelar las pistas rivales todavía
+      if ((state.matchStatus === 'setup' || state.matchStatus === 'countdown') && !isOwnTeamChallenge && !isSolvedForMyTeam) {
         cluesContainer.innerHTML = `
           <div class="clue-card locked-role" style="opacity: 0.95; border-left-color: #f4a261;">
             <div class="role-header">
-              <span>⏳ ESPERANDO A LOS ${state.maxTeams} EQUIPOS</span>
-              <span>FASE DE PREPARACIÓN</span>
+              <span>${state.matchStatus === 'countdown' ? '🎲 SORTEANDO ROLES Y LANZANDO CUENTA ATRÁS' : `⏳ ESPERANDO EL OK DE LOS JUGADORES Y LOS ${state.maxTeams} EQUIPOS`}</span>
+              <span>${state.matchStatus === 'countdown' ? '¡PREPÁRATE!' : 'FASE DE PREPARACIÓN'}</span>
             </div>
-            <div>Las pistas de las capturas rivales se desbloquearán automáticamente en cuanto <strong>los ${state.maxTeams} equipos hayan subido su captura, rellenado los datos y confirmado equipos completos</strong>.</div>
+            <div>
+              ${state.matchStatus === 'countdown'
+                ? 'En breves segundos se activará el reloj de partida y recibirás aquí <strong>únicamente la pista secreta del rol que te ha tocado</strong>.'
+                : `Cuando todos los jugadores den el OK (<strong>"✋ Dar mi OK: ¡Estoy Listo!"</strong>) y los ${state.maxTeams} equipos tengan su captura subida, comenzará la cuenta atrás, se repartirán los roles automáticamente y cada jugador recibirá solo su pista.`
+              }
+            </div>
           </div>
         `;
         return;
@@ -2867,32 +3070,108 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
 
       const clues = ch.clues || {};
 
-      cluesContainer.innerHTML = ALL_ROLES.map(roleKey => {
-        const isMine = state.assignedRoles.includes(roleKey);
-        if (!isMine && !state.showAllClues) {
-          const teammate = state.players.find(p => p.team === state.team && (p.assignedRoles || []).includes(roleKey));
-          const holderName = teammate ? teammate.name : 'otro miembro de tu equipo';
-          return `
-            <div class="clue-card locked-role">
-              <div class="role-header">
-                <span>${ROLE_NAMES[roleKey]}</span>
-                <span>🔒 Asignado a: ${holderName}</span>
-              </div>
-              <div>Pídele esta pista a <strong>${holderName}</strong> por el Chat Privado o Radio de Voz de tu equipo.</div>
-            </div>
-          `;
-        }
-
+      // Renderizar primero y de forma destacada SOLO las pistas de tus roles asignados
+      const myRoleCards = state.assignedRoles.map(roleKey => {
+        const clueText = clues[roleKey] || 'Pista reservada para este rol.';
         return `
-          <div class="clue-card ${isMine ? 'my-role' : ''}">
+          <div class="clue-card my-role" style="border-width: 2px; background: rgba(42, 157, 143, 0.16);">
             <div class="role-header">
-              <span>${ROLE_NAMES[roleKey]}</span>
-              <span>${isMine ? '✅ TU ROL ASIGNADO' : 'VISTA COMPLETA'}</span>
+              <span style="font-size: 0.92rem;">${ROLE_NAMES[roleKey]}</span>
+              <span style="background: #2a9d8f; color: #fff; padding: 2px 8px; border-radius: 12px;">🎯 TU PISTA EXCLUSIVA</span>
             </div>
-            <div>${clues[roleKey] || 'Sin pista registrada.'}</div>
+            <div style="font-size: 0.96rem; color: #fff; font-weight: 600; margin-top: 4px;">${clueText}</div>
           </div>
         `;
       }).join('');
+
+      // Renderizar debajo los roles que tienen asignados tus otros compañeros (sin la pista, pues el servidor solo la envía a su dueño)
+      const otherRoles = ALL_ROLES.filter(r => !state.assignedRoles.includes(r));
+      const otherRoleCards = otherRoles.map(roleKey => {
+        if (isSolvedForMyTeam || isOwnTeamChallenge) {
+          return `
+            <div class="clue-card">
+              <div class="role-header">
+                <span>${ROLE_NAMES[roleKey]}</span>
+                <span>🔓 REVELADA</span>
+              </div>
+              <div>${clues[roleKey] || ''}</div>
+            </div>
+          `;
+        }
+        const teammate = state.players.find(p => p.team === state.team && (p.assignedRoles || []).includes(roleKey));
+        const holderName = (state.roleHolders && state.roleHolders[roleKey]) || (teammate ? teammate.name : 'otro miembro de tu equipo');
+        return `
+          <div class="clue-card locked-role">
+            <div class="role-header">
+              <span>${ROLE_NAMES[roleKey]}</span>
+              <span>🔒 Pista enviada solo a: ${holderName}</span>
+            </div>
+            <div>Esta pista solo la recibe <strong>${holderName}</strong> en su pantalla. Pregúntale por el Chat o Voz de tu equipo para combinar vuestras pistas antes de que se agote el tiempo.</div>
+          </div>
+        `;
+      }).join('');
+
+      cluesContainer.innerHTML = myRoleCards + otherRoleCards;
+    }
+
+    function runRoleToolDecode() {
+      const inputEl = document.getElementById('workbench-input');
+      const outEl = document.getElementById('workbench-output');
+      let raw = inputEl.value.trim();
+
+      // Si el input está vacío, buscar automáticamente un código entre comillas en la pista del Decodificador
+      if (!raw) {
+        const ch = state.challenges.find(c => c.id === state.selectedChallengeId);
+        const decClue = ch && ch.clues && ch.clues['decoder'] ? ch.clues['decoder'] : '';
+        const match = decClue.match(/"([A-Za-z0-9+/=]{4,})"/);
+        if (match) {
+          raw = match[1];
+          inputEl.value = raw;
+        }
+      }
+
+      if (!raw) {
+        outEl.textContent = '⚠️ Escribe o pega el código Base64 de tu pista para descifrarlo.';
+        return;
+      }
+
+      try {
+        const decoded = decodeURIComponent(escape(atob(raw)));
+        outEl.innerHTML = `✅ <strong>Código Descifrado:</strong> "${decoded}" — ¡Compártelo con tu equipo pulsando Enviar Hallazgo!`;
+        inputEl.value = decoded;
+      } catch (e) {
+        outEl.innerHTML = `🔎 <strong>Análisis de Pista:</strong> "${raw}" — Listo para compartir con el equipo.`;
+      }
+    }
+
+    async function sendRoleFindingToTeamChat() {
+      const inputEl = document.getElementById('workbench-input');
+      const outEl = document.getElementById('workbench-output');
+      const val = inputEl.value.trim();
+      const myRoleLabel = state.assignedRoles.map(r => ROLE_NAMES[r]).join('/');
+
+      if (!val) {
+        await shareMyAssignedCluesToChat();
+        outEl.textContent = '✅ Tu pista asignada se ha enviado al chat privado de tu equipo.';
+        return;
+      }
+
+      await fetch('./api/?action=sendTeamMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode: state.roomCode,
+          teamId: state.team,
+          playerId: state.playerId,
+          senderName: state.playerName,
+          type: 'text',
+          text: `🧩 [Hallazgo de ${myRoleLabel}]: ${val}`
+        })
+      }).catch(() => {});
+
+      inputEl.value = '';
+      outEl.textContent = '📤 ¡Hallazgo enviado al chat privado de tu equipo!';
+      await syncRoomState();
     }
 
     function handleVerifyImageClick(e) {

@@ -39,8 +39,9 @@ function getTeamsForMax(int $maxTeams): array {
         : ['team-alpha', 'team-beta'];
 }
 
-function createDefaultRoom(string $code, string $name = '', int $maxTeams = 2, bool $isPublic = true): array {
+function createDefaultRoom(string $code, string $name = '', int $maxTeams = 2, bool $isPublic = true, int $timeLimitSeconds = 300): array {
     $maxTeams = ($maxTeams === 4) ? 4 : 2;
+    $timeLimitSeconds = max(60, min(600, $timeLimitSeconds));
     $teams = getTeamsForMax($maxTeams);
     if (trim($name) === '') {
         $name = "Expedición Digital #$code";
@@ -71,10 +72,16 @@ function createDefaultRoom(string $code, string $name = '', int $maxTeams = 2, b
         'name' => $name,
         'maxTeams' => $maxTeams,
         'isPublic' => $isPublic,
+        'timeLimitSeconds' => $timeLimitSeconds, // Por defecto 300s (5 minutos)
         'createdAt' => time() * 1000,
-        'matchStatus' => 'setup', // 'setup' | 'hunting' | 'finished'
+        'matchStatus' => 'setup', // 'setup' | 'countdown' | 'hunting' | 'finished'
+        'countdownEndsAt' => null,
+        'huntStartedAt' => null,
+        'huntEndsAt' => null,
+        'finishReason' => null, // 'all_solved' | 'timeout'
         'winnerTeam' => null,
         'winnerAt' => null,
+        'rolesLocked' => false,
         'teamReady' => $teamReady,
         'teamScores' => $teamScores,
         'players' => [],
@@ -119,8 +126,26 @@ function normalizeRoom(array &$room): void {
     if (!isset($room['isPublic'])) {
         $room['isPublic'] = true;
     }
+    if (!isset($room['timeLimitSeconds']) || intval($room['timeLimitSeconds']) < 60) {
+        $room['timeLimitSeconds'] = 300;
+    }
     if (!isset($room['winnerTeam'])) {
         $room['winnerTeam'] = null;
+    }
+    if (!isset($room['countdownEndsAt'])) {
+        $room['countdownEndsAt'] = null;
+    }
+    if (!isset($room['huntStartedAt'])) {
+        $room['huntStartedAt'] = null;
+    }
+    if (!isset($room['huntEndsAt'])) {
+        $room['huntEndsAt'] = null;
+    }
+    if (!isset($room['finishReason'])) {
+        $room['finishReason'] = null;
+    }
+    if (!isset($room['rolesLocked'])) {
+        $room['rolesLocked'] = false;
     }
     $teams = getTeamsForMax($room['maxTeams']);
     if (!isset($room['teamReady']) || !is_array($room['teamReady'])) {
@@ -151,12 +176,21 @@ function normalizeRoom(array &$room): void {
             ]];
         }
     }
+    if (isset($room['players']) && is_array($room['players'])) {
+        foreach ($room['players'] as $pid => &$pl) {
+            if (!isset($pl['isReady'])) {
+                $pl['isReady'] = false;
+            }
+        }
+        unset($pl);
+    }
 }
 
 /**
  * Reparte siempre los 5 roles entre los jugadores de un equipo en esa sala.
+ * Si $randomize es true (al arrancar la cuenta atrás), sortea el orden de roles automáticamente.
  */
-function assignRolesForTeam(array &$players, string $teamId, array $allRoles): void {
+function assignRolesForTeam(array &$players, string $teamId, array $allRoles, bool $randomize = false): void {
     $teamPlayerIds = [];
     foreach ($players as $pid => $p) {
         if (($p['team'] ?? '') === $teamId) {
@@ -166,6 +200,30 @@ function assignRolesForTeam(array &$players, string $teamId, array $allRoles): v
 
     $count = count($teamPlayerIds);
     if ($count === 0) {
+        return;
+    }
+
+    if ($randomize) {
+        $rolesPool = $allRoles;
+        shuffle($rolesPool);
+        shuffle($teamPlayerIds);
+        $assigned = [];
+        foreach ($teamPlayerIds as $pid) {
+            $assigned[$pid] = [];
+        }
+        $idx = 0;
+        foreach ($rolesPool as $roleKey) {
+            $targetPid = $teamPlayerIds[$idx % $count];
+            $assigned[$targetPid][] = $roleKey;
+            $idx++;
+        }
+        foreach ($teamPlayerIds as $pid) {
+            if (empty($assigned[$pid])) {
+                $assigned[$pid][] = $rolesPool[array_rand($rolesPool)];
+            }
+            $players[$pid]['assignedRoles'] = $assigned[$pid];
+            $players[$pid]['preferredRole'] = $assigned[$pid][0];
+        }
         return;
     }
 
@@ -217,7 +275,7 @@ function assignRolesForTeam(array &$players, string $teamId, array $allRoles): v
     }
 }
 
-function recalculateRoomRoles(array &$room, array $allRoles): void {
+function recalculateRoomRoles(array &$room, array $allRoles, bool $forceRandomize = false): void {
     normalizeRoom($room);
     if (!isset($room['players']) || !is_array($room['players'])) {
         $room['players'] = [];
@@ -229,17 +287,33 @@ function recalculateRoomRoles(array &$room, array $allRoles): void {
         }
     }
 
+    // Si los roles ya se sortearon al empezar la partida, solo asignar a jugadores nuevos que no tengan rol
+    if (!empty($room['rolesLocked']) && !$forceRandomize && ($room['matchStatus'] ?? 'setup') !== 'setup') {
+        foreach ($room['players'] as $pid => &$pl) {
+            if (empty($pl['assignedRoles'])) {
+                $pl['assignedRoles'] = [$pl['preferredRole'] ?? 'decoder'];
+            }
+        }
+        unset($pl);
+        return;
+    }
+
     $teams = getTeamsForMax($room['maxTeams']);
     foreach ($teams as $t) {
-        assignRolesForTeam($room['players'], $t, $allRoles);
+        assignRolesForTeam($room['players'], $t, $allRoles, $forceRandomize);
+    }
+    if ($forceRandomize) {
+        $room['rolesLocked'] = true;
     }
 }
 
 /**
- * Calcula qué equipos ya subieron su captura y si la partida debe pasar a 'hunting'
+ * Calcula qué equipos ya subieron su captura, gestiona la cuenta atrás de inicio (5s),
+ * el sorteo automático de roles y el límite de tiempo de la ronda (ej. 5 minutos).
  */
 function evaluateRoomMatchStatus(array &$room): array {
     normalizeRoom($room);
+    $nowMs = round(microtime(true) * 1000);
     $teams = getTeamsForMax($room['maxTeams']);
     $teamHasChallenge = [];
     foreach ($teams as $t) {
@@ -253,9 +327,26 @@ function evaluateRoomMatchStatus(array &$room): array {
         }
     }
 
-    // Si la partida ya terminó con un ganador, mantener 'finished' hasta nueva ronda
-    if (($room['matchStatus'] ?? '') === 'finished' && !empty($room['winnerTeam'])) {
+    // Si la partida ya terminó, mantener 'finished' hasta nueva ronda
+    if (($room['matchStatus'] ?? '') === 'finished') {
         return $teamHasChallenge;
+    }
+
+    // Sincronizar teamReady automáticamente si todos los miembros presentes de ese equipo dieron su OK y hay captura
+    foreach ($teams as $t) {
+        $teamMembers = array_filter($room['players'] ?? [], fn($p) => ($p['team'] ?? '') === $t);
+        if (!empty($teamMembers) && !empty($teamHasChallenge[$t])) {
+            $allMembersOk = true;
+            foreach ($teamMembers as $m) {
+                if (empty($m['isReady'])) {
+                    $allMembersOk = false;
+                    break;
+                }
+            }
+            if ($allMembersOk) {
+                $room['teamReady'][$t] = true;
+            }
+        }
     }
 
     $allReadyAndUploaded = true;
@@ -266,7 +357,79 @@ function evaluateRoomMatchStatus(array &$room): array {
         }
     }
 
-    $room['matchStatus'] = $allReadyAndUploaded ? 'hunting' : 'setup';
+    if (!$allReadyAndUploaded) {
+        $room['matchStatus'] = 'setup';
+        $room['countdownEndsAt'] = null;
+        $room['huntStartedAt'] = null;
+        $room['huntEndsAt'] = null;
+        $room['rolesLocked'] = false;
+        return $teamHasChallenge;
+    }
+
+    // Todos los equipos tienen captura y están listos: iniciar cuenta atrás de 5 segundos y sortear roles automáticamente
+    if (($room['matchStatus'] ?? 'setup') === 'setup' || empty($room['countdownEndsAt'])) {
+        $room['matchStatus'] = 'countdown';
+        $room['countdownEndsAt'] = $nowMs + 5000; // 5 segundos de cuenta atrás
+        $room['huntStartedAt'] = $room['countdownEndsAt'];
+        $timeLimitMs = intval($room['timeLimitSeconds'] ?? 300) * 1000;
+        $room['huntEndsAt'] = $room['huntStartedAt'] + $timeLimitMs;
+        recalculateRoomRoles($room, $GLOBALS['ALL_ROLES'], true);
+
+        // Anunciar en el chat de cada equipo qué rol le ha tocado a cada miembro
+        foreach ($teams as $t) {
+            $summaryParts = [];
+            foreach ($room['players'] ?? [] as $pl) {
+                if (($pl['team'] ?? '') === $t) {
+                    $rList = implode(', ', $pl['assignedRoles'] ?? []);
+                    $summaryParts[] = "{$pl['name']} → [{$rList}]";
+                }
+            }
+            if (!empty($summaryParts)) {
+                $room['chats'][$t][] = [
+                    'id' => 'sys_roles_' . $nowMs . '_' . rand(10, 99),
+                    'senderId' => 'system',
+                    'senderName' => 'Director de Juego',
+                    'type' => 'text',
+                    'text' => "🎲 ¡Todos listos! Roles repartidos automáticamente: " . implode(' | ', $summaryParts) . ". ¡Tenéis " . round(($room['timeLimitSeconds'] ?? 300) / 60) . " minutos para descifrar las capturas rivales!",
+                    'timestamp' => $nowMs
+                ];
+            }
+        }
+    }
+
+    // Pasar de 'countdown' a 'hunting' cuando termine la cuenta atrás de 5s
+    if ($room['matchStatus'] === 'countdown' && $nowMs >= intval($room['countdownEndsAt'])) {
+        $room['matchStatus'] = 'hunting';
+    }
+
+    // Comprobar si se agotó el tiempo máximo de la partida (ej. 5 minutos)
+    if ($room['matchStatus'] === 'hunting' && !empty($room['huntEndsAt']) && $nowMs >= intval($room['huntEndsAt'])) {
+        $room['matchStatus'] = 'finished';
+        $room['finishReason'] = 'timeout';
+        $room['winnerAt'] = $nowMs;
+
+        // Determinar si algún equipo va ganando en capturas resueltas al agotarse el tiempo
+        $bestTeam = null;
+        $bestSolved = 0;
+        $tie = false;
+        foreach ($teams as $t) {
+            $solvedCount = 0;
+            foreach ($room['challenges'] ?? [] as $chItem) {
+                if (($chItem['teamId'] ?? '') !== $t && in_array($t, $chItem['solvedByTeams'] ?? [], true)) {
+                    $solvedCount++;
+                }
+            }
+            if ($solvedCount > $bestSolved) {
+                $bestSolved = $solvedCount;
+                $bestTeam = $t;
+                $tie = false;
+            } elseif ($solvedCount > 0 && $solvedCount === $bestSolved) {
+                $tie = true;
+            }
+        }
+        $room['winnerTeam'] = (!$tie && $bestSolved > 0) ? $bestTeam : 'timeout';
+    }
+
     return $teamHasChallenge;
 }
 
@@ -423,15 +586,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         file_put_contents($dataFile, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
 
-        // Para cada reto: se mantiene difuminado para un equipo cazador mientras ESE equipo aún no lo haya resuelto
-        $publicChallenges = array_map(function ($ch) use ($teamId) {
+        $myAssignedRoles = ($playerId !== '' && isset($room['players'][$playerId]['assignedRoles']))
+            ? $room['players'][$playerId]['assignedRoles']
+            : $ALL_ROLES;
+
+        // Mapa de qué compañero de mi equipo tiene cada rol
+        $roleHolders = [];
+        foreach ($ALL_ROLES as $rKey) {
+            $roleHolders[$rKey] = 'Compañero de escuadrón';
+            foreach ($room['players'] ?? [] as $pl) {
+                if (($pl['team'] ?? '') === $teamId && in_array($rKey, $pl['assignedRoles'] ?? [], true)) {
+                    $roleHolders[$rKey] = $pl['name'] ?? 'Agente';
+                    break;
+                }
+            }
+        }
+
+        $currentMatchStatus = $room['matchStatus'] ?? 'setup';
+
+        // Para cada reto: se mantiene difuminado y las pistas filtradas exclusivamente por el rol asignado al jugador
+        $publicChallenges = array_map(function ($ch) use ($teamId, $myAssignedRoles, $currentMatchStatus) {
             $copy = $ch;
             $solvedByTeams = $copy['solvedByTeams'] ?? [];
             if (!is_array($solvedByTeams)) {
                 $solvedByTeams = [];
             }
             $isOwnTeam = (($copy['teamId'] ?? '') === $teamId);
-            $hasMyTeamSolvedIt = in_array($teamId, $solvedByTeams, true) || (($copy['status'] ?? '') === 'solved' && ($copy['solvedByTeam'] ?? '') === $teamId);
+            $hasMyTeamSolvedIt = in_array($teamId, $solvedByTeams, true)
+                || (($copy['status'] ?? '') === 'solved' && ($copy['solvedByTeam'] ?? '') === $teamId)
+                || ($currentMatchStatus === 'finished');
 
             $copy['solvedByMyTeam'] = $hasMyTeamSolvedIt;
             $copy['solvedByTeams'] = $solvedByTeams;
@@ -444,6 +627,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     $copy['screenshot'] = $copy['blurredScreenshot'];
                     $copy['isBlurred'] = true;
                 }
+
+                // Filtrado estricto de pistas en el servidor:
+                // - En 'setup' o 'countdown': aún no llega ninguna pista rival
+                // - En 'hunting': SOLO llega al navegador del jugador la pista de su(s) rol(es) asignado(s)
+                if ($currentMatchStatus !== 'hunting') {
+                    $copy['clues'] = [];
+                } else {
+                    $filteredClues = [];
+                    foreach ($copy['clues'] ?? [] as $rKey => $clueText) {
+                        if (in_array($rKey, $myAssignedRoles, true)) {
+                            $filteredClues[$rKey] = $clueText;
+                        }
+                    }
+                    $copy['clues'] = $filteredClues;
+                }
             }
             unset($copy['blurredScreenshot']);
             return $copy;
@@ -453,11 +651,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         echo json_encode([
             'success' => true,
+            'serverNowMs' => round(microtime(true) * 1000),
             'roomCode' => $roomCode,
             'roomName' => $room['name'] ?? $roomCode,
             'maxTeams' => $room['maxTeams'],
             'isPublic' => (bool)($room['isPublic'] ?? true),
+            'timeLimitSeconds' => intval($room['timeLimitSeconds'] ?? 300),
             'matchStatus' => $room['matchStatus'],
+            'countdownEndsAt' => $room['countdownEndsAt'] ?? null,
+            'huntStartedAt' => $room['huntStartedAt'] ?? null,
+            'huntEndsAt' => $room['huntEndsAt'] ?? null,
+            'finishReason' => $room['finishReason'] ?? null,
+            'rolesLocked' => (bool)($room['rolesLocked'] ?? false),
+            'roleHolders' => $roleHolders,
             'winnerTeam' => $room['winnerTeam'] ?? null,
             'teamReady' => $room['teamReady'],
             'teamHasChallenge' => $teamHasChallenge,
@@ -528,11 +734,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // 0b. Crear Nueva Partida desde la Pantalla Principal (2 o 4 equipos, con o sin nombre personalizado)
+    // 0b. Crear Nueva Partida desde la Pantalla Principal (2 o 4 equipos, con o sin nombre personalizado, y tiempo límite)
     if ($action === 'createRoom') {
         $maxTeams = intval($input['maxTeams'] ?? 2) === 4 ? 4 : 2;
         $customName = trim($input['roomName'] ?? '');
         $forcePrivate = isset($input['isPrivate']) ? (bool)$input['isPrivate'] : false;
+        $timeLimitSeconds = intval($input['timeLimitSeconds'] ?? 300);
+        if ($timeLimitSeconds < 60 || $timeLimitSeconds > 600) {
+            $timeLimitSeconds = 300;
+        }
 
         // Si el jugador no le da ningún nombre a la sala, el juego le asigna uno por defecto y aparece en Partidas Abiertas
         if ($customName === '') {
@@ -550,7 +760,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $isPublic = !$forcePrivate;
         }
 
-        $store['rooms'][$code] = createDefaultRoom($code, $roomName, $maxTeams, $isPublic);
+        $store['rooms'][$code] = createDefaultRoom($code, $roomName, $maxTeams, $isPublic, $timeLimitSeconds);
         file_put_contents($dataFile, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
 
         echo json_encode([
@@ -580,7 +790,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($store['rooms'][$roomCode])) {
         $maxTeamsReq = intval($input['maxTeams'] ?? 2) === 4 ? 4 : 2;
         $roomName = htmlspecialchars(trim($input['roomName'] ?? ''));
-        $store['rooms'][$roomCode] = createDefaultRoom($roomCode, $roomName, $maxTeamsReq, true);
+        $store['rooms'][$roomCode] = createDefaultRoom($roomCode, $roomName, $maxTeamsReq, true, 300);
     }
 
     $room = &$store['rooms'][$roomCode];
@@ -600,6 +810,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $existingJoinedAt = $room['players'][$playerId]['joinedAt'] ?? (time() * 1000);
+        $existingReady = $room['players'][$playerId]['isReady'] ?? false;
+        $existingTeam = $room['players'][$playerId]['team'] ?? $team;
+        if ($existingTeam !== $team) {
+            $existingReady = false;
+        }
         $isNewInRoom = !isset($room['players'][$playerId]);
 
         $room['players'][$playerId] = [
@@ -607,7 +822,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'name' => $name ?: 'Agente',
             'team' => $team,
             'preferredRole' => $preferredRole,
-            'assignedRoles' => [$preferredRole],
+            'assignedRoles' => $room['players'][$playerId]['assignedRoles'] ?? [$preferredRole],
+            'isReady' => (bool)$existingReady,
             'joinedAt' => $existingJoinedAt,
             'lastSeen' => time() * 1000
         ];
@@ -701,10 +917,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!empty($input['teamReady'])) {
             $room['teamReady'][$teamOfChallenge] = true;
+            foreach ($room['players'] ?? [] as $pid => &$pl) {
+                if (($pl['team'] ?? '') === $teamOfChallenge) {
+                    $pl['isReady'] = true;
+                }
+            }
+            unset($pl);
         }
 
         // Estadísticas de creación de reto
         $creatorId = $input['playerId'] ?? '';
+        if ($creatorId !== '' && isset($room['players'][$creatorId])) {
+            $room['players'][$creatorId]['isReady'] = true;
+        }
         if ($creatorId !== '' && isset($store['users'][$creatorId])) {
             $store['users'][$creatorId]['stats']['challengesHidden'] = ($store['users'][$creatorId]['stats']['challengesHidden'] ?? 0) + 1;
         }
@@ -719,9 +944,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'success' => true,
             'challenge' => $ch,
             'matchStatus' => $room['matchStatus'],
+            'countdownEndsAt' => $room['countdownEndsAt'],
+            'huntEndsAt' => $room['huntEndsAt'],
             'teamReady' => $room['teamReady'],
             'teamHasChallenge' => $teamHasChallenge,
             'teamScores' => $room['teamScores']
+        ]);
+        exit;
+    }
+
+    // 3a. Confirmar OK individual de cada jugador ("¡Estoy Listo!")
+    if ($action === 'setPlayerReady') {
+        $playerId = preg_replace('/[^a-zA-Z0-9_\-]/', '', $input['playerId'] ?? '');
+        $ready = isset($input['ready']) ? (bool)$input['ready'] : true;
+        if ($playerId !== '' && isset($room['players'][$playerId])) {
+            $room['players'][$playerId]['isReady'] = $ready;
+            $pTeam = $room['players'][$playerId]['team'] ?? 'team-alpha';
+            if (!$ready) {
+                $room['teamReady'][$pTeam] = false;
+            }
+        }
+        $teamHasChallenge = evaluateRoomMatchStatus($room);
+        file_put_contents($dataFile, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+
+        echo json_encode([
+            'success' => true,
+            'matchStatus' => $room['matchStatus'],
+            'countdownEndsAt' => $room['countdownEndsAt'],
+            'huntEndsAt' => $room['huntEndsAt'],
+            'teamReady' => $room['teamReady'],
+            'teamHasChallenge' => $teamHasChallenge,
+            'players' => array_values($room['players'] ?? [])
         ]);
         exit;
     }
@@ -733,12 +986,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ready = isset($input['ready']) ? (bool)$input['ready'] : true;
         $room['teamReady'][$teamId] = $ready;
 
+        foreach ($room['players'] ?? [] as $pid => &$pl) {
+            if (($pl['team'] ?? '') === $teamId) {
+                $pl['isReady'] = $ready;
+            }
+        }
+        unset($pl);
+
         $teamHasChallenge = evaluateRoomMatchStatus($room);
         file_put_contents($dataFile, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
 
         echo json_encode([
             'success' => true,
             'matchStatus' => $room['matchStatus'],
+            'countdownEndsAt' => $room['countdownEndsAt'],
+            'huntEndsAt' => $room['huntEndsAt'],
             'teamReady' => $room['teamReady'],
             'teamHasChallenge' => $teamHasChallenge
         ]);
@@ -747,11 +1009,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'newRound') {
         $room['matchStatus'] = 'setup';
+        $room['countdownEndsAt'] = null;
+        $room['huntStartedAt'] = null;
+        $room['huntEndsAt'] = null;
+        $room['finishReason'] = null;
+        $room['rolesLocked'] = false;
         $room['winnerTeam'] = null;
         $room['winnerAt'] = null;
         foreach ($validTeams as $t) {
             $room['teamReady'][$t] = false;
         }
+        foreach ($room['players'] ?? [] as $pid => &$pl) {
+            $pl['isReady'] = false;
+        }
+        unset($pl);
         $room['challenges'] = [];
         file_put_contents($dataFile, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
         echo json_encode(['success' => true, 'matchStatus' => 'setup', 'teamReady' => $room['teamReady']]);
@@ -760,11 +1031,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 4. Verificar intento de resolución (en 2 o 4 equipos: hay que adivinar las capturas de todos los equipos rivales; el primero en completarlas todas gana)
     if ($action === 'verifyAttempt' && !empty($input['challengeId'])) {
-        if (($room['matchStatus'] ?? 'setup') === 'setup') {
+        $teamHasChallenge = evaluateRoomMatchStatus($room);
+        if (($room['matchStatus'] ?? 'setup') === 'setup' || ($room['matchStatus'] ?? '') === 'countdown') {
             $numT = $room['maxTeams'];
             echo json_encode([
                 'success' => false,
-                'error' => "⏳ La partida aún no ha comenzado. Los {$numT} equipos deben subir su captura, rellenar los datos y confirmar que los equipos están completos."
+                'error' => "⏳ La partida aún no ha comenzado. Todos los jugadores y los {$numT} equipos deben dar su OK y esperar a que termine la cuenta atrás."
+            ]);
+            exit;
+        }
+        if (($room['matchStatus'] ?? '') === 'finished' && ($room['finishReason'] ?? '') === 'timeout') {
+            echo json_encode([
+                'success' => false,
+                'error' => "⏱️ ¡Se agotó el tiempo límite de la ronda! Pulsa en Nueva Ronda para iniciar otra partida."
             ]);
             exit;
         }
@@ -776,7 +1055,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $reqSolverTeam = $input['solverTeam'] ?? 'team-beta';
         $solverTeam = in_array($reqSolverTeam, $validTeams, true) ? $reqSolverTeam : 'team-beta';
         $solverName = htmlspecialchars($input['solverName'] ?? 'Agente');
-        $solverId = $input['playerId'] ?? '';
+        $solverId = $input['solverPlayerId'] ?? ($input['playerId'] ?? '');
 
         $foundIndex = -1;
         foreach ($room['challenges'] as $idx => $ch) {
@@ -886,6 +1165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($solvedRivalCount >= $neededToWin && $rivalChallengesCount >= $neededToWin && empty($room['winnerTeam'])) {
                 $room['matchStatus'] = 'finished';
+                $room['finishReason'] = 'all_solved';
                 $room['winnerTeam'] = $solverTeam;
                 $room['winnerAt'] = time() * 1000;
                 $teamWonMatch = true;
@@ -921,6 +1201,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode([
             'success' => true,
             'solved' => true,
+            'matchWon' => $teamWonMatch ?? false,
+            'solvedCountForTeam' => $solvedRivalCount ?? 1,
+            'neededToWin' => $neededToWin ?? 1,
+            'message' => $msgText ?? '¡Captura rival descifrada!',
             'matchStatus' => $room['matchStatus'],
             'winnerTeam' => $room['winnerTeam'],
             'teamScores' => $room['teamScores'],
