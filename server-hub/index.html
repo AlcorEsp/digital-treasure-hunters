@@ -140,6 +140,315 @@
       box-shadow: 0 0 12px rgba(42, 157, 143, 0.5);
     }
 
+    .team-btn.active.gamma {
+      background: #f4a261;
+      color: #0b131b;
+      box-shadow: 0 0 12px rgba(244, 162, 97, 0.5);
+    }
+
+    .team-btn.active.delta {
+      background: #9b5de5;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(155, 93, 229, 0.5);
+    }
+
+    /* ================= PANTALLA PRINCIPAL (LOBBY HERO + ILUSTRACIÓN + BOTONES PRINCIPALES) ================= */
+    .home-screen {
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(42, 157, 143, 0.22) 0%, transparent 45%),
+        radial-gradient(circle at 80% 30%, rgba(230, 57, 70, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(244, 162, 97, 0.15) 0%, transparent 50%),
+        linear-gradient(180deg, #071018 0%, #0f2030 55%, #09131c 100%);
+      padding: 24px 18px 50px;
+    }
+
+    .home-bg-art {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.35;
+      z-index: 0;
+    }
+
+    .home-wrapper {
+      position: relative;
+      z-index: 2;
+      max-width: 1220px;
+      margin: 0 auto;
+    }
+
+    .home-top-auth {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: rgba(15, 29, 42, 0.85);
+      border: 1px solid rgba(217, 194, 173, 0.28);
+      padding: 12px 18px;
+      border-radius: 14px;
+      backdrop-filter: blur(8px);
+      margin-bottom: 22px;
+    }
+
+    .auth-buttons-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .auth-btn {
+      padding: 7px 13px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+      background: #1c3144;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .auth-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    }
+
+    .auth-btn.google { background: #db4437; border-color: #ff6b5b; }
+    .auth-btn.meta { background: #1877f2; border-color: #5ca0ff; }
+    .auth-btn.email { background: #2a9d8f; border-color: #52b788; }
+    .auth-btn.guest { background: rgba(255,255,255,0.1); border-color: rgba(217,194,173,0.4); color: var(--accent); }
+
+    /* BANNER HERO ILUSTRADO (BÚSQUEDA, COMPAÑERISMO E INTERNET) */
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(19, 39, 58, 0.92) 0%, rgba(28, 59, 82, 0.88) 100%);
+      border: 2px solid rgba(217, 194, 173, 0.4);
+      border-radius: 20px;
+      padding: 28px 26px;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.55);
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+      align-items: center;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (max-width: 900px) {
+      .hero-banner {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .hero-title {
+      font-size: 2.3rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: #fff;
+      text-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    .hero-title span {
+      color: #f4a261;
+    }
+
+    .hero-Lead {
+      font-size: 1rem;
+      color: #d6e4f0;
+      margin-bottom: 16px;
+      max-width: 620px;
+    }
+
+    .pillars-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .pillars-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pillar-card {
+      background: rgba(9, 18, 28, 0.65);
+      border: 1px solid rgba(217, 194, 173, 0.25);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pillar-icon {
+      font-size: 1.65rem;
+      background: rgba(244, 162, 97, 0.15);
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .pillar-card strong {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+
+    .pillar-card span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .hero-illustration-box {
+      background: rgba(8, 16, 24, 0.7);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    /* 3 BOTONES PRINCIPALES DE ACCIÓN EN EL LOBBY */
+    .main-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .main-actions-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .big-menu-btn {
+      background: linear-gradient(145deg, #1b3147 0%, #142434 100%);
+      border: 2px solid rgba(217, 194, 173, 0.35);
+      border-radius: 16px;
+      padding: 22px 20px;
+      color: #fff;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .big-menu-btn:hover, .big-menu-btn.active-card {
+      transform: translateY(-4px);
+      border-color: #f4a261;
+      box-shadow: 0 14px 32px rgba(244, 162, 97, 0.25);
+      background: linear-gradient(145deg, #23405c 0%, #182c40 100%);
+    }
+
+    .big-menu-btn .btn-icon {
+      font-size: 2.2rem;
+    }
+
+    .big-menu-btn h3 {
+      font-size: 1.25rem;
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .big-menu-btn p {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .big-menu-btn .cta-tag {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #f4a261;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .lobby-subpanel {
+      background: rgba(21, 35, 49, 0.95);
+      border: 2px solid var(--accent);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 24px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+    }
+
+    .team-mode-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 12px 0 16px;
+    }
+
+    .mode-option-btn {
+      background: var(--bg-card);
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 14px;
+      color: #fff;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .mode-option-btn.selected {
+      border-color: #2a9d8f;
+      background: rgba(42, 157, 143, 0.22);
+      box-shadow: 0 0 16px rgba(42, 157, 143, 0.35);
+    }
+
+    .open-rooms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .open-room-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .stats-grid-lobby {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 850px) {
+      .stats-grid-lobby {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .score-num {
       background: rgba(0,0,0,0.35);
       padding: 2px 8px;
@@ -686,13 +995,296 @@
 </head>
 <body>
 
+  <!-- ================= PANTALLA PRINCIPAL (LOBBY VISUAL + REGISTRO + CREAR/UNIRSE) ================= -->
+  <section id="home-screen" class="home-screen">
+    <!-- Fondo ilustrado de red global, coordenadas y brújula digital -->
+    <svg class="home-bg-art" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <circle cx="720" cy="450" r="380" stroke="#52969a" stroke-width="1" stroke-dasharray="6 8" opacity="0.4"/>
+      <circle cx="720" cy="450" r="260" stroke="#d9c2ad" stroke-width="1" stroke-dasharray="4 6" opacity="0.3"/>
+      <path d="M120 220 L480 340 L890 190 L1290 380 L1050 710 L380 680 Z" stroke="#3c6e71" stroke-width="1.5" opacity="0.35"/>
+      <circle cx="480" cy="340" r="6" fill="#f4a261"/>
+      <circle cx="890" cy="190" r="6" fill="#2a9d8f"/>
+      <circle cx="1050" cy="710" r="6" fill="#e63946"/>
+      <circle cx="380" cy="680" r="6" fill="#9b5de5"/>
+    </svg>
+
+    <div class="home-wrapper">
+
+      <!-- BARRA SUPERIOR DE PERFIL: REGISTRO (GOOGLE, META, EMAIL) O JUGAR SIN REGISTRO -->
+      <div class="home-top-auth">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span style="font-size: 1.4rem;">🎖️</span>
+          <div>
+            <div id="auth-status-label" style="font-weight: 800; font-size: 0.92rem; color: #fff;">
+              Modo Explorador Invitado (Sin Registro)
+            </div>
+            <div id="auth-stats-mini" style="font-size: 0.78rem; color: var(--accent);">
+              Puedes jugar sin registro al instante o registrarte para guardar estadísticas globales de jugador y equipo.
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-buttons-row">
+          <button type="button" class="auth-btn google" onclick="openAuthModal('google')">
+            🔴 Entrar con Google
+          </button>
+          <button type="button" class="auth-btn meta" onclick="openAuthModal('meta')">
+            🔵 Entrar con Meta
+          </button>
+          <button type="button" class="auth-btn email" onclick="openAuthModal('email')">
+            ✉️ Registro con E-mail
+          </button>
+          <button type="button" class="auth-btn guest" onclick="playAsGuestQuick()">
+            🕶️ Jugar Sin Registro
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal / Panel Desplegable de Registro Rápido (Google / Meta / E-mail) -->
+      <div id="auth-modal-box" class="lobby-subpanel hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 id="auth-modal-title" style="color: var(--accent); font-size: 1.1rem;">🔐 Vincular Cuenta para Estadísticas</h3>
+          <button type="button" class="mini-btn" style="background:#445;" onclick="closeAuthModal()">Cerrar ✕</button>
+        </div>
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 12px;">
+          Introduce tu alias de jugador y correo para vincular tus victorias, capturas resueltas y puntos de escuadrón:
+        </p>
+        <form onsubmit="submitAuthForm(event)" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;">
+          <div class="form-group" style="margin:0;">
+            <label>👤 Nombre / Alias de Caza:</label>
+            <input type="text" id="auth-input-name" placeholder="Ej: ComandanteAlcor" required>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>📧 Correo de la cuenta (<span id="auth-provider-tag">Google</span>):</label>
+            <input type="email" id="auth-input-email" placeholder="tu@correo.com" required>
+          </div>
+          <button type="submit" class="btn btn-success" style="height: 40px;">Guardar Perfil y Estadísticas</button>
+        </form>
+      </div>
+
+      <!-- BANNER CENTRAL CON DIBUJO/ARTE DEL JUEGO: BÚSQUEDA, COMPAÑERISMO E INTERNET -->
+      <div class="hero-banner">
+        <div>
+          <span class="badge solved" style="margin-bottom: 8px; font-size: 0.76rem; letter-spacing: 0.5px;">
+            🌐 AVENTURA MULTIJUGADOR DE INVESTIGACIÓN EN LA WEB
+          </span>
+          <h1 class="hero-title">
+            DIGITAL <span>TREASURE</span> HUNTERS
+          </h1>
+          <p class="hero-Lead">
+            Forma tu escuadrón de <strong>2 o 4 equipos</strong>, esconde reliquias digitales en cualquier rincón de <strong>Internet</strong> mediante capturas secretas y coordínate por voz y chat con tus compañeros para descifrar las pistas antes que los equipos rivales.
+          </p>
+
+          <!-- Los 3 Pilares Visuales del Juego -->
+          <div class="pillars-row">
+            <div class="pillar-card">
+              <div class="pillar-icon">🔎</div>
+              <div>
+                <strong>Búsqueda y Misterio</strong>
+                <span>Capturas difuminadas y 5 pistas generadas con IA</span>
+              </div>
+            </div>
+            <div class="pillar-card">
+              <div class="pillar-icon">🤝</div>
+              <div>
+                <strong>Compañerismo Real</strong>
+                <span>5 roles cooperativos, Walkie-Talkie y Voz en vivo</span>
+              </div>
+            </div>
+            <div class="pillar-card">
+              <div class="pillar-icon">🌍</div>
+              <div>
+                <strong>Todo Internet</strong>
+                <span>Explora webs, historia, códigos y mapas reales</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ilustración SVG temática hecha a medida: Exploradores, Red Global, Lupa y Cofre Digital -->
+        <div class="hero-illustration-box">
+          <svg viewBox="0 0 460 280" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="skyGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#0d2235"/>
+                <stop offset="100%" stop-color="#1d4358"/>
+              </linearGradient>
+              <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f4a261"/>
+                <stop offset="100%" stop-color="#e76f51"/>
+              </linearGradient>
+            </defs>
+            <rect width="460" height="280" rx="14" fill="url(#skyGrad)"/>
+            <!-- Globo de Internet y líneas de red -->
+            <circle cx="230" cy="135" r="92" stroke="#52969a" stroke-width="1.5" fill="rgba(42,157,143,0.08)"/>
+            <ellipse cx="230" cy="135" rx="92" ry="38" stroke="#52969a" stroke-width="1" stroke-dasharray="4 4" fill="none"/>
+            <ellipse cx="230" cy="135" rx="42" ry="92" stroke="#52969a" stroke-width="1" stroke-dasharray="4 4" fill="none"/>
+            <!-- Nodos de los 4 Equipos conectados en cooperación/competición -->
+            <line x1="95" y1="75" x2="230" y2="135" stroke="#e63946" stroke-width="2"/>
+            <line x1="365" y1="75" x2="230" y2="135" stroke="#2a9d8f" stroke-width="2"/>
+            <line x1="95" y1="205" x2="230" y2="135" stroke="#f4a261" stroke-width="2"/>
+            <line x1="365" y1="205" x2="230" y2="135" stroke="#9b5de5" stroke-width="2"/>
+            <!-- Tarjetas de los escuadrones -->
+            <rect x="35" y="48" width="110" height="42" rx="8" fill="#16293b" stroke="#e63946" stroke-width="2"/>
+            <text x="90" y="73" fill="#ff8fa3" font-size="11" font-family="Segoe UI" font-weight="bold" text-anchor="middle">⚔️ EQUIPO ALPHA</text>
+            <rect x="315" y="48" width="110" height="42" rx="8" fill="#16293b" stroke="#2a9d8f" stroke-width="2"/>
+            <text x="370" y="73" fill="#80ed99" font-size="11" font-family="Segoe UI" font-weight="bold" text-anchor="middle">🛡️ EQUIPO BETA</text>
+            <rect x="35" y="182" width="110" height="42" rx="8" fill="#16293b" stroke="#f4a261" stroke-width="2"/>
+            <text x="90" y="207" fill="#f4a261" font-size="11" font-family="Segoe UI" font-weight="bold" text-anchor="middle">⚡ EQUIPO GAMMA</text>
+            <rect x="315" y="182" width="110" height="42" rx="8" fill="#16293b" stroke="#9b5de5" stroke-width="2"/>
+            <text x="370" y="207" fill="#c792ea" font-size="11" font-family="Segoe UI" font-weight="bold" text-anchor="middle">🔥 EQUIPO DELTA</text>
+            <!-- Cofre / Tesoro Digital Central + Lupa de Búsqueda -->
+            <rect x="192" y="102" width="76" height="58" rx="10" fill="url(#goldGrad)" stroke="#fff" stroke-width="2"/>
+            <path d="M192 126 H268" stroke="#fff" stroke-width="2"/>
+            <circle cx="230" cy="126" r="8" fill="#0b131b" stroke="#fff" stroke-width="2"/>
+            <circle cx="268" cy="158" r="24" fill="rgba(11,19,27,0.8)" stroke="#80ed99" stroke-width="3"/>
+            <line x1="285" y1="175" x2="304" y2="194" stroke="#80ed99" stroke-width="5" stroke-linecap="round"/>
+            <text x="230" y="258" fill="#d9c2ad" font-size="12" font-family="Segoe UI" font-weight="bold" text-anchor="middle">
+              🧭 BÚSQUEDA · 🤝 COMPAÑERISMO · 🌐 INTERNET
+            </text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- LOS 3 GRANDES BOTONES INTUITIVOS DEL MENÚ PRINCIPAL -->
+      <div class="main-actions-grid">
+        <!-- BOTÓN 1: CREAR PARTIDA -->
+        <button type="button" class="big-menu-btn active-card" id="menu-btn-create" onclick="showLobbyPanel('create')">
+          <div>
+            <div class="btn-icon">🛠️</div>
+            <h3>CREAR PARTIDA</h3>
+            <p>Elige entre batalla de <strong>2 Equipos</strong> o <strong>4 Equipos</strong> y dale nombre a tu sala para invitar. Si lo dejas en blanco, se creará con nombre automático en Partidas Abiertas.</p>
+          </div>
+          <span class="cta-tag">👉 Configurar 2 o 4 Equipos</span>
+        </button>
+
+        <!-- BOTÓN 2: UNIRSE A PARTIDA (PRIVADA / CÓDIGO O NOMBRE) -->
+        <button type="button" class="big-menu-btn" id="menu-btn-join-private" onclick="showLobbyPanel('join-private')">
+          <div>
+            <div class="btn-icon">🔑</div>
+            <h3>UNIRSE A PARTIDA</h3>
+            <p>Únete directamente a una sala creada por tus amigos o por otros jugadores introduciendo el nombre de su sala o el código de invitación.</p>
+          </div>
+          <span class="cta-tag">👉 Entrar con Nombre o Código</span>
+        </button>
+
+        <!-- BOTÓN 3: UNIRSE A PARTIDA ABIERTA (MULTIPLAYER PÚBLICO) -->
+        <button type="button" class="big-menu-btn" id="menu-btn-join-open" onclick="showLobbyPanel('join-open')">
+          <div>
+            <div class="btn-icon">🌍</div>
+            <h3>UNIRSE A PARTIDA ABIERTA</h3>
+            <p>Explora las salas abiertas activas ahora mismo y juega en multijugador con otros cazadores de tesoros aunque no os conozcáis.</p>
+          </div>
+          <span class="cta-tag">👉 Ver Salas Abiertas (<span id="open-rooms-count-badge">2</span>)</span>
+        </button>
+      </div>
+
+      <!-- SUBPANEL 1: CREAR PARTIDA (2 O 4 EQUIPOS + NOMBRE DE SALA) -->
+      <div id="lobby-panel-create" class="lobby-subpanel">
+        <h2 style="color: var(--accent); font-size: 1.25rem; margin-bottom: 4px;">🛠️ Configurar Nueva Partida</h2>
+        <p style="font-size: 0.86rem; color: var(--text-muted);">
+          Paso 1: Selecciona cuántos equipos competirán. La partida empezará cuando todos los equipos hayan subido su captura y confirmado equipo completo. ¡El primer equipo en adivinar la captura de todos los demás gana!
+        </p>
+
+        <div class="team-mode-selector">
+          <div class="mode-option-btn selected" id="mode-btn-2teams" onclick="selectCreateMaxTeams(2)">
+            <div style="font-size: 1.5rem; margin-bottom: 4px;">⚔️ VS 🛡️</div>
+            <div style="font-weight: 800; font-size: 1.05rem;">MODO 2 EQUIPOS (Duelo Clásico)</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 3px;">
+              Equipo Alpha vs Equipo Beta. Empieza cuando ambos suben su captura. Gana el primero en descifrar la captura rival.
+            </div>
+          </div>
+
+          <div class="mode-option-btn" id="mode-btn-4teams" onclick="selectCreateMaxTeams(4)">
+            <div style="font-size: 1.5rem; margin-bottom: 4px;">⚔️ 🛡️ ⚡ 🔥</div>
+            <div style="font-weight: 800; font-size: 1.05rem;">MODO 4 EQUIPOS (Batalla Total)</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 3px;">
+              Alpha, Beta, Gamma y Delta. Empieza cuando los 4 equipos suben su captura. ¡Hay que adivinar las 3 capturas rivales para ganar!
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="create-room-name-input">🏷️ Nombre de tu Sala de Juego (Opcional — para invitar a tus jugadores):</label>
+          <input type="text" id="create-room-name-input" placeholder="Déjalo vacío para asignar un nombre por defecto y publicarla en Partidas Abiertas...">
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px;">
+          <label style="font-size: 0.83rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="create-room-private-chk" style="width: 17px; height: 17px;">
+            🔒 Hacer que esta sala sea Privada (solo accesible con nombre/código o enlace de invitación)
+          </label>
+
+          <button type="button" class="btn btn-success" style="width: auto; padding: 12px 26px; font-size: 1rem;" onclick="createNewGameFromLobby()">
+            🚀 Crear Sala y Entrar al Juego
+          </button>
+        </div>
+      </div>
+
+      <!-- SUBPANEL 2: UNIRSE A PARTIDA PRIVADA / POR NOMBRE O CÓDIGO -->
+      <div id="lobby-panel-join-private" class="lobby-subpanel hidden">
+        <h2 style="color: var(--accent); font-size: 1.25rem; margin-bottom: 6px;">🔑 Unirse a la Sala de otro Jugador</h2>
+        <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 14px;">
+          Escribe el <strong>nombre de la sala</strong> o el <strong>código</strong> que te haya compartido el creador de la partida:
+        </p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <input type="text" id="join-private-input" placeholder="Ej: SALA-1 o el nombre que le dio tu amigo..." style="flex: 1; padding: 12px; border-radius: 8px; background: var(--bg-dark); border: 1px solid rgba(255,255,255,0.25); color: #fff; font-size: 1rem;">
+          <button type="button" class="btn btn-success" style="width: auto; padding: 12px 26px;" onclick="joinPrivateRoomFromLobby()">
+            🚪 Entrar a la Sala
+          </button>
+        </div>
+      </div>
+
+      <!-- SUBPANEL 3: LISTADO DE PARTIDAS ABIERTAS (MULTIPLAYER PÚBLICO) -->
+      <div id="lobby-panel-join-open" class="lobby-subpanel hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h2 style="color: var(--accent); font-size: 1.25rem;">🌍 Partidas Abiertas en Curso</h2>
+            <p style="font-size: 0.84rem; color: var(--text-muted);">
+              Únete con un clic a cualquiera de las salas públicas o crea una partida rápida sin nombre para que aparezca aquí.
+            </p>
+          </div>
+          <button type="button" class="mini-btn" style="background: #2a9d8f; padding: 8px 14px;" onclick="createQuickOpenRoom()">
+            ⚡ Crear Partida Abierta Rápida
+          </button>
+        </div>
+
+        <div id="open-rooms-container" class="open-rooms-grid">
+          <p style="color: var(--text-muted);">Buscando partidas abiertas...</p>
+        </div>
+      </div>
+
+      <!-- ESTADÍSTICAS GLOBALES DE EQUIPOS Y RANKING DE JUGADORES -->
+      <div class="stats-grid-lobby">
+        <div class="panel">
+          <h2>🏆 Estadísticas Globales por Equipos</h2>
+          <p class="sub">Rendimiento histórico acumulado de los 4 escuadrones en ForgeProjects.es</p>
+          <div id="global-team-stats-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
+        </div>
+
+        <div class="panel">
+          <h2>🎖️ Ranking de Cazadores Registrados</h2>
+          <p class="sub">Regístrate con Google, Meta o E-mail arriba para sumar tus victorias y capturas descifradas</p>
+          <div id="global-players-leaderboard" style="font-size: 0.85rem;"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= PANTALLA DE JUEGO DENTRO DE LA SALA ================= -->
+  <div id="game-screen" class="hidden">
+
   <!-- 1. BARRA SUPERIOR: MARCADOR Y SALA DE PARTIDA -->
   <header class="top-bar">
     <div class="brand">
-      <div style="font-size: 1.8rem;">🧭</div>
+      <button type="button" class="mini-btn" style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); padding: 7px 12px;" onclick="returnToMainLobby()">
+        🏠 Menú Principal
+      </button>
+      <div style="font-size: 1.6rem;">🧭</div>
       <div>
-        <h1>Digital Treasure Hunters</h1>
-        <span>Multijugador por Salas y Equipos — ForgeProjects.es</span>
+        <h1 id="header-room-title">Digital Treasure Hunters</h1>
+        <span id="header-room-subtitle">Multijugador por Salas y Equipos — ForgeProjects.es</span>
       </div>
     </div>
 
@@ -700,19 +1292,23 @@
     <div class="room-box">
       <span style="font-size: 0.8rem; color: var(--accent); font-weight: 700;">🎲 SALA:</span>
       <input type="text" id="room-code-input" value="SALA-1" title="Escribe el código de tu partida">
-      <button class="mini-btn" onclick="changeRoom()">Entrar</button>
-      <button class="mini-btn" style="background: var(--secondary);" onclick="createNewRandomRoom()" title="Crear una sala nueva aleatoria">+ Nueva</button>
-      <button class="mini-btn" style="background: #2a9d8f;" onclick="copyRoomInviteLink()" id="invite-link-btn">🔗 Invitar</button>
+      <button class="mini-btn" onclick="changeRoom()">Cambiar</button>
+      <button class="mini-btn" style="background: #2a9d8f;" onclick="copyRoomInviteLink()" id="invite-link-btn">🔗 Invitar Jugadores</button>
     </div>
 
-    <!-- Marcador de la Sala Actual -->
-    <div class="scoreboard">
+    <!-- Marcador Dinámico de 2 o 4 Equipos -->
+    <div class="scoreboard" id="scoreboard-bar">
       <button id="btn-team-alpha" class="team-btn alpha active" onclick="setTeam('team-alpha')">
         ⚔️ ALPHA <span class="score-num" id="score-alpha">0</span>
       </button>
-      <span style="font-weight: 900; color: var(--accent); font-size: 0.8rem;">VS</span>
       <button id="btn-team-beta" class="team-btn beta" onclick="setTeam('team-beta')">
         🛡️ BETA <span class="score-num" id="score-beta">0</span>
+      </button>
+      <button id="btn-team-gamma" class="team-btn gamma hidden" onclick="setTeam('team-gamma')">
+        ⚡ GAMMA <span class="score-num" id="score-gamma">0</span>
+      </button>
+      <button id="btn-team-delta" class="team-btn delta hidden" onclick="setTeam('team-delta')">
+        🔥 DELTA <span class="score-num" id="score-delta">0</span>
       </button>
     </div>
   </header>
@@ -761,8 +1357,10 @@
             </div>
           </div>
           <div class="readiness-pills">
-            <span class="ready-pill" id="pill-alpha-status">⚔️ Alpha: ⏳ Pendiente</span>
-            <span class="ready-pill" id="pill-beta-status">🛡️ Beta: ⏳ Pendiente</span>
+            <div id="dynamic-readiness-pills" style="display:flex; flex-wrap:wrap; gap:6px;">
+              <span class="ready-pill" id="pill-alpha-status">⚔️ Alpha: ⏳ Pendiente</span>
+              <span class="ready-pill" id="pill-beta-status">🛡️ Beta: ⏳ Pendiente</span>
+            </div>
             <button type="button" class="mini-btn" id="btn-toggle-team-ready" style="background: #2a9d8f;" onclick="toggleMyTeamReady()">
               ✅ Confirmar Mi Equipo Completo y Listo
             </button>
@@ -952,9 +1550,10 @@
 
     </div>
   </div>
+  </div> <!-- Fin #game-screen -->
 
   <script>
-    // ================= ESTADO MULTIJUGADOR POR SALA Y EQUIPO =================
+    // ================= ESTADO MULTIJUGADOR POR SALA, 2/4 EQUIPOS Y PERFIL =================
     const ALL_ROLES = ['decoder', 'navigator', 'historian', 'translator', 'visual-analyst'];
     const ROLE_NAMES = {
       'decoder': '🔎 Decodificador',
@@ -964,8 +1563,23 @@
       'visual-analyst': '👁️ Analista Visual'
     };
 
+    const TEAM_NAMES = {
+      'team-alpha': '⚔️ Equipo Alpha',
+      'team-beta':  '🛡️ Equipo Beta',
+      'team-gamma': '⚡ Equipo Gamma',
+      'team-delta': '🔥 Equipo Delta'
+    };
+
+    const TEAM_SHORT = {
+      'team-alpha': '⚔️ Alpha',
+      'team-beta':  '🛡️ Beta',
+      'team-gamma': '⚡ Gamma',
+      'team-delta': '🔥 Delta'
+    };
+
     const urlParams = new URLSearchParams(window.location.search);
-    const initialRoom = (urlParams.get('room') || localStorage.getItem('dth_room') || 'SALA-1').toUpperCase();
+    const urlRoomParam = urlParams.get('room');
+    const initialRoom = (urlRoomParam || localStorage.getItem('dth_room') || 'SALA-1').toUpperCase();
 
     let playerId = localStorage.getItem('dth_player_id');
     if (!playerId) {
@@ -974,7 +1588,15 @@
     }
 
     let state = {
+      inLobby: !urlRoomParam,
+      createMaxTeams: 2,
+      authProvider: localStorage.getItem('dth_auth_provider') || 'guest',
+      authEmail: localStorage.getItem('dth_auth_email') || '',
+      userStats: { matchesPlayed: 0, matchesWon: 0, capturesSolved: 0, challengesHidden: 0 },
       roomCode: initialRoom,
+      roomName: initialRoom,
+      maxTeams: 2,
+      winnerTeam: null,
       playerId: playerId,
       playerName: localStorage.getItem('dth_name') || ('Agente-' + playerId.slice(2, 5).toUpperCase()),
       team: localStorage.getItem('dth_team') || 'team-alpha',
@@ -983,9 +1605,9 @@
       players: [],
       challenges: [],
       matchStatus: 'setup',
-      teamReady: { 'team-alpha': false, 'team-beta': false },
-      teamHasChallenge: { 'team-alpha': false, 'team-beta': false },
-      teamScores: { 'team-alpha': 0, 'team-beta': 0 },
+      teamReady: { 'team-alpha': false, 'team-beta': false, 'team-gamma': false, 'team-delta': false },
+      teamHasChallenge: { 'team-alpha': false, 'team-beta': false, 'team-gamma': false, 'team-delta': false },
+      teamScores: { 'team-alpha': 0, 'team-beta': 0, 'team-gamma': 0, 'team-delta': 0 },
       teamChat: [],
       selectedChallengeId: null,
       showAllClues: false,
@@ -1003,6 +1625,13 @@
     let audioChunks = [];
     let isRecordingVoice = false;
     let liveVoiceOpen = false;
+    let pendingAuthProvider = 'google';
+
+    function getActiveTeamsList() {
+      return state.maxTeams === 4
+        ? ['team-alpha', 'team-beta', 'team-gamma', 'team-delta']
+        : ['team-alpha', 'team-beta'];
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('room-code-input').value = state.roomCode;
@@ -1014,19 +1643,279 @@
       nameInput.addEventListener('change', () => {
         state.playerName = nameInput.value.trim() || 'Agente';
         localStorage.setItem('dth_name', state.playerName);
+        syncUserProfileWithServer();
         registerPresenceInRoom();
       });
 
-      updateTeamThemeUI();
-      await registerPresenceInRoom();
-      await syncRoomState();
+      await syncUserProfileWithServer();
+      await fetchLobbyData();
 
-      // Sincronización periódica cada 3.5 segundos (jugadores, roles, retos y chat/voz de equipo)
-      setInterval(syncRoomState, 3500);
+      if (!state.inLobby) {
+        enterGameScreenUI();
+        await registerPresenceInRoom();
+        await syncRoomState();
+      } else {
+        returnToMainLobby(false);
+      }
+
+      // Sincronización periódica cada 3.5 segundos
+      setInterval(() => {
+        if (state.inLobby) {
+          fetchLobbyData();
+        } else {
+          syncRoomState();
+        }
+      }, 3500);
 
       // Soporte para pegar capturas con Ctrl+V
       window.addEventListener('paste', handleClipboardPaste);
     });
+
+    // ================= PANTALLA PRINCIPAL (LOBBY, REGISTRO Y PARTIDAS ABIERTAS/PRIVADAS) =================
+    function showLobbyPanel(panelKey) {
+      document.getElementById('lobby-panel-create').classList.toggle('hidden', panelKey !== 'create');
+      document.getElementById('lobby-panel-join-private').classList.toggle('hidden', panelKey !== 'join-private');
+      document.getElementById('lobby-panel-join-open').classList.toggle('hidden', panelKey !== 'join-open');
+
+      document.getElementById('menu-btn-create').classList.toggle('active-card', panelKey === 'create');
+      document.getElementById('menu-btn-join-private').classList.toggle('active-card', panelKey === 'join-private');
+      document.getElementById('menu-btn-join-open').classList.toggle('active-card', panelKey === 'join-open');
+
+      if (panelKey === 'join-open') {
+        fetchLobbyData();
+      }
+    }
+
+    function selectCreateMaxTeams(num) {
+      state.createMaxTeams = (num === 4) ? 4 : 2;
+      document.getElementById('mode-btn-2teams').classList.toggle('selected', state.createMaxTeams === 2);
+      document.getElementById('mode-btn-4teams').classList.toggle('selected', state.createMaxTeams === 4);
+    }
+
+    function openAuthModal(provider) {
+      pendingAuthProvider = provider;
+      const labels = { google: 'Google', meta: 'Meta / Facebook', email: 'E-mail' };
+      document.getElementById('auth-provider-tag').textContent = labels[provider] || 'E-mail';
+      document.getElementById('auth-modal-title').textContent = `🔐 Iniciar Sesión / Registro con ${labels[provider] || 'E-mail'}`;
+      document.getElementById('auth-input-name').value = state.playerName;
+      document.getElementById('auth-input-email').value = state.authEmail || '';
+      document.getElementById('auth-modal-box').classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal-box').classList.add('hidden');
+    }
+
+    async function submitAuthForm(e) {
+      e.preventDefault();
+      const name = document.getElementById('auth-input-name').value.trim();
+      const email = document.getElementById('auth-input-email').value.trim();
+      if (!name || !email) return;
+
+      state.playerName = name;
+      state.authEmail = email;
+      state.authProvider = pendingAuthProvider;
+
+      localStorage.setItem('dth_name', state.playerName);
+      localStorage.setItem('dth_auth_email', state.authEmail);
+      localStorage.setItem('dth_auth_provider', state.authProvider);
+      document.getElementById('player-name').value = state.playerName;
+
+      await syncUserProfileWithServer();
+      closeAuthModal();
+      await fetchLobbyData();
+    }
+
+    async function playAsGuestQuick() {
+      state.authProvider = 'guest';
+      localStorage.setItem('dth_auth_provider', 'guest');
+      closeAuthModal();
+      await syncUserProfileWithServer();
+      showLobbyPanel('join-open');
+    }
+
+    async function syncUserProfileWithServer() {
+      try {
+        const res = await fetch('./api/?action=authUser', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: state.playerId,
+            name: state.playerName,
+            email: state.authEmail,
+            provider: state.authProvider
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success && data.user) {
+            state.playerId = data.user.id;
+            localStorage.setItem('dth_player_id', state.playerId);
+            state.userStats = data.user.stats || state.userStats;
+            renderAuthBannerUI(data.user);
+          }
+        }
+      } catch (e) {}
+    }
+
+    function renderAuthBannerUI(user) {
+      const label = document.getElementById('auth-status-label');
+      const mini = document.getElementById('auth-stats-mini');
+      const provBadge = { google: '🔴 Google', meta: '🔵 Meta', email: '✉️ E-mail', guest: '🕶️ Sin Registro' };
+      const st = user.stats || { matchesPlayed: 0, matchesWon: 0, capturesSolved: 0, challengesHidden: 0 };
+
+      if (user.isRegistered) {
+        label.innerHTML = `✅ Conectado como <strong>${user.name}</strong> (${provBadge[user.provider] || 'Registrado'})`;
+      } else {
+        label.innerHTML = `🕶️ Jugando como Invitado: <strong>${user.name}</strong> (Sin Registro)`;
+      }
+      mini.innerHTML = `📊 Tus Estadísticas: <strong>${st.matchesWon || 0}</strong> Victorias · <strong>${st.capturesSolved || 0}</strong> Capturas Adivinadas · <strong>${st.challengesHidden || 0}</strong> Capturas Ocultadas`;
+    }
+
+    async function fetchLobbyData() {
+      try {
+        const res = await fetch('./api/?action=lobbyData');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data || !data.success) return;
+
+        const openRooms = data.openRooms || [];
+        document.getElementById('open-rooms-count-badge').textContent = openRooms.length;
+
+        const openContainer = document.getElementById('open-rooms-container');
+        if (openRooms.length === 0) {
+          openContainer.innerHTML = `<p style="color: var(--text-muted);">No hay partidas abiertas en este instante. ¡Pulsa en Crear Partida sin poner nombre y se abrirá una enseguida!</p>`;
+        } else {
+          openContainer.innerHTML = openRooms.map(rm => {
+            const statusText = rm.matchStatus === 'hunting'
+              ? '🔥 En Caza'
+              : (rm.matchStatus === 'finished' ? '🏆 Finalizada' : `⏳ Preparando (${rm.teamsReadyCount}/${rm.maxTeams} equipos listos)`);
+            return `
+              <div class="open-room-card">
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px;">
+                    <span class="badge solved">${rm.maxTeams} EQUIPOS</span>
+                    <span style="font-size:0.75rem; color:var(--accent); font-weight:700;">Código: ${rm.code}</span>
+                  </div>
+                  <div style="font-weight:800; font-size:1rem; color:#fff; margin-bottom:4px;">${rm.name}</div>
+                  <div style="font-size:0.8rem; color:var(--text-muted);">
+                    👥 ${rm.playersCount} jugador(es) · ${statusText}
+                  </div>
+                </div>
+                <button type="button" class="btn btn-success" onclick="enterRoomFromLobby('${rm.code}')">
+                  🌍 Unirse a esta Partida Abierta
+                </button>
+              </div>
+            `;
+          }).join('');
+        }
+
+        // Estadísticas globales de los 4 equipos
+        const gTeams = data.globalTeamStats || {};
+        const teamStatsBox = document.getElementById('global-team-stats-box');
+        teamStatsBox.innerHTML = ['team-alpha', 'team-beta', 'team-gamma', 'team-delta'].map(tKey => {
+          const ts = gTeams[tKey] || { matchesWon: 0, capturesSolved: 0, challengesHidden: 0 };
+          return `
+            <div style="background:var(--bg-card); padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
+              <div style="font-weight:800; color:#fff; font-size:0.9rem;">${TEAM_NAMES[tKey]}</div>
+              <div style="font-size:0.78rem; color:var(--accent); margin-top:3px;">
+                🏆 <strong>${ts.matchesWon || 0}</strong> Partidas Ganadas<br>
+                🎯 <strong>${ts.capturesSolved || 0}</strong> Capturas Adivinadas
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Ranking de jugadores
+        const lb = data.leaderboard || [];
+        const lbBox = document.getElementById('global-players-leaderboard');
+        if (lb.length === 0) {
+          lbBox.innerHTML = `<p style="color:var(--text-muted);">Aún no hay cazadores en el ranking. ¡Sé el primero en sumar puntos!</p>`;
+        } else {
+          lbBox.innerHTML = lb.slice(0, 6).map((u, idx) => {
+            const st = u.stats || {};
+            const tag = u.isRegistered ? '✅' : '🕶️';
+            return `
+              <div style="display:flex; justify-content:space-between; padding:7px 10px; background:var(--bg-card); border-radius:8px; margin-bottom:6px;">
+                <span><strong>#${idx + 1}</strong> ${tag} ${u.name}</span>
+                <span style="color:var(--accent); font-weight:700;">🏆 ${st.matchesWon || 0} victorias · 🎯 ${st.capturesSolved || 0} aciertos</span>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {}
+    }
+
+    async function createNewGameFromLobby() {
+      const customName = document.getElementById('create-room-name-input').value.trim();
+      const isPrivate = document.getElementById('create-room-private-chk').checked;
+
+      try {
+        const res = await fetch('./api/?action=createRoom', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            maxTeams: state.createMaxTeams,
+            roomName: customName,
+            isPrivate: isPrivate
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success && data.room) {
+            await enterRoomFromLobby(data.room.code);
+          }
+        }
+      } catch (e) {}
+    }
+
+    async function createQuickOpenRoom() {
+      document.getElementById('create-room-name-input').value = '';
+      document.getElementById('create-room-private-chk').checked = false;
+      await createNewGameFromLobby();
+    }
+
+    async function joinPrivateRoomFromLobby() {
+      const val = document.getElementById('join-private-input').value.trim();
+      if (!val) return;
+      await enterRoomFromLobby(val);
+    }
+
+    async function enterRoomFromLobby(roomCodeOrName) {
+      state.roomCode = roomCodeOrName.trim().toUpperCase();
+      localStorage.setItem('dth_room', state.roomCode);
+      state.selectedChallengeId = null;
+      state.initialChatLoaded = false;
+      state.autoSwitchedToHunt = false;
+
+      enterGameScreenUI();
+      document.getElementById('room-code-input').value = state.roomCode;
+      document.getElementById('current-room-label').textContent = state.roomCode;
+      document.getElementById('hide-room-label').textContent = state.roomCode;
+
+      const newUrl = `${window.location.pathname}?room=${encodeURIComponent(state.roomCode)}`;
+      window.history.replaceState({}, '', newUrl);
+
+      await registerPresenceInRoom();
+      await syncRoomState();
+    }
+
+    function enterGameScreenUI() {
+      state.inLobby = false;
+      document.getElementById('home-screen').classList.add('hidden');
+      document.getElementById('game-screen').classList.remove('hidden');
+      updateTeamThemeUI();
+    }
+
+    function returnToMainLobby(pushUrl = true) {
+      state.inLobby = true;
+      document.getElementById('game-screen').classList.add('hidden');
+      document.getElementById('home-screen').classList.remove('hidden');
+      if (pushUrl) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+      fetchLobbyData();
+    }
 
     // ================= GESTIÓN DE SALAS (PARTIDAS) =================
     async function changeRoom() {
@@ -1086,21 +1975,30 @@
     }
 
     function updateTeamThemeUI() {
-      const isAlpha = state.team === 'team-alpha';
-      document.getElementById('btn-team-alpha').classList.toggle('active', isAlpha);
-      document.getElementById('btn-team-beta').classList.toggle('active', !isAlpha);
+      const activeTeams = getActiveTeamsList();
+      if (!activeTeams.includes(state.team)) {
+        state.team = 'team-alpha';
+      }
+
+      document.getElementById('btn-team-alpha').classList.toggle('active', state.team === 'team-alpha');
+      document.getElementById('btn-team-beta').classList.toggle('active', state.team === 'team-beta');
+      document.getElementById('btn-team-gamma').classList.toggle('active', state.team === 'team-gamma');
+      document.getElementById('btn-team-delta').classList.toggle('active', state.team === 'team-delta');
+
+      document.getElementById('btn-team-gamma').classList.toggle('hidden', state.maxTeams !== 4);
+      document.getElementById('btn-team-delta').classList.toggle('hidden', state.maxTeams !== 4);
 
       const commsPanel = document.getElementById('team-comms-panel');
-      commsPanel.classList.toggle('alpha-theme', isAlpha);
-      commsPanel.classList.toggle('beta-theme', !isAlpha);
+      commsPanel.classList.toggle('alpha-theme', state.team === 'team-alpha' || state.team === 'team-gamma');
+      commsPanel.classList.toggle('beta-theme', state.team === 'team-beta' || state.team === 'team-delta');
 
-      document.getElementById('comms-title').textContent = isAlpha
-        ? '🔒 Radio y Chat — Equipo Alpha'
-        : '🔒 Radio y Chat — Equipo Beta';
+      const teamFull = TEAM_NAMES[state.team] || '⚔️ Equipo Alpha';
+      const teamShort = TEAM_SHORT[state.team] || '⚔️ Alpha';
+      document.getElementById('comms-title').textContent = `🔒 Radio y Chat — ${teamFull}`;
 
       const badge = document.getElementById('comms-privacy-badge');
-      badge.className = 'badge ' + (isAlpha ? 'alpha' : 'beta');
-      badge.textContent = isAlpha ? 'Solo Alpha' : 'Solo Beta';
+      badge.className = 'badge ' + (state.team === 'team-alpha' ? 'alpha' : 'beta');
+      badge.textContent = `Solo ${teamShort}`;
     }
 
     // Reparto local de respaldo (idéntico al del servidor PHP) por si aún no respondió la red
@@ -1151,11 +2049,23 @@
         if (res.ok) {
           const data = await res.json();
           if (data && data.success) {
+            state.roomCode = data.roomCode || state.roomCode;
+            state.roomName = data.roomName || state.roomCode;
+            state.maxTeams = (data.maxTeams === 4) ? 4 : 2;
+            state.winnerTeam = data.winnerTeam || null;
             state.players = data.players || [];
-            state.teamScores = data.teamScores || { 'team-alpha': 0, 'team-beta': 0 };
+            state.teamScores = data.teamScores || { 'team-alpha': 0, 'team-beta': 0, 'team-gamma': 0, 'team-delta': 0 };
             state.matchStatus = data.matchStatus || 'setup';
             state.teamReady = data.teamReady || { 'team-alpha': false, 'team-beta': false };
             state.teamHasChallenge = data.teamHasChallenge || { 'team-alpha': false, 'team-beta': false };
+
+            document.getElementById('header-room-title').textContent = state.roomName;
+            document.getElementById('header-room-subtitle').textContent = `Sala ${state.roomCode} · Modo ${state.maxTeams} Equipos (Gana el primero en adivinar las ${state.maxTeams - 1} capturas rivales)`;
+            document.getElementById('room-code-input').value = state.roomCode;
+            document.getElementById('current-room-label').textContent = state.roomName;
+            document.getElementById('hide-room-label').textContent = state.roomName;
+
+            updateTeamThemeUI();
 
             const me = state.players.find(p => p.id === state.playerId);
             if (me && Array.isArray(me.assignedRoles) && me.assignedRoles.length > 0) {
@@ -1173,12 +2083,14 @@
               state.autoSwitchedToHunt = true;
             }
 
-            // Seleccionar preferentemente el reto del equipo rival para cazar
-            const rivalTeam = state.team === 'team-alpha' ? 'team-beta' : 'team-alpha';
-            const rivalChallenge = state.challenges.find(c => c.teamId === rivalTeam);
+            // Seleccionar preferentemente un reto de un equipo rival aún no resuelto por mi equipo
+            const pendingRivalChallenge = state.challenges.find(c => c.teamId !== state.team && !c.solvedByMyTeam);
+            const anyRivalChallenge = state.challenges.find(c => c.teamId !== state.team);
             if (!state.selectedChallengeId || !state.challenges.some(c => c.id === state.selectedChallengeId)) {
-              if (rivalChallenge) {
-                state.selectedChallengeId = rivalChallenge.id;
+              if (pendingRivalChallenge) {
+                state.selectedChallengeId = pendingRivalChallenge.id;
+              } else if (anyRivalChallenge) {
+                state.selectedChallengeId = anyRivalChallenge.id;
               } else if (state.challenges.length > 0) {
                 state.selectedChallengeId = state.challenges[0].id;
               }
@@ -1191,7 +2103,9 @@
 
             document.getElementById('score-alpha').textContent = state.teamScores['team-alpha'] || 0;
             document.getElementById('score-beta').textContent = state.teamScores['team-beta'] || 0;
-            document.getElementById('active-count').textContent = state.challenges.filter(c => c.status === 'active').length;
+            document.getElementById('score-gamma').textContent = state.teamScores['team-gamma'] || 0;
+            document.getElementById('score-delta').textContent = state.teamScores['team-delta'] || 0;
+            document.getElementById('active-count').textContent = state.challenges.length;
 
             renderMatchPhaseBanner();
             renderSquadAndRolesBar();
@@ -1206,41 +2120,49 @@
       const bar = document.getElementById('match-phase-bar');
       const title = document.getElementById('match-phase-title');
       const sub = document.getElementById('match-phase-subtitle');
-      const pillAlpha = document.getElementById('pill-alpha-status');
-      const pillBeta = document.getElementById('pill-beta-status');
+      const pillsBox = document.getElementById('dynamic-readiness-pills');
       const btnReady = document.getElementById('btn-toggle-team-ready');
       const btnNewRound = document.getElementById('btn-new-round');
 
-      const alphaCap = !!state.teamHasChallenge['team-alpha'];
-      const betaCap  = !!state.teamHasChallenge['team-beta'];
-      const alphaRdy = !!state.teamReady['team-alpha'];
-      const betaRdy  = !!state.teamReady['team-beta'];
+      const activeTeams = getActiveTeamsList();
+      const neededRivals = Math.max(1, state.maxTeams - 1);
 
-      const alphaComplete = alphaCap && alphaRdy;
-      const betaComplete  = betaCap && betaRdy;
-
-      pillAlpha.className = 'ready-pill' + (alphaComplete ? ' done' : '');
-      pillAlpha.textContent = `⚔️ Alpha: ${alphaCap ? '📸 Captura OK' : '⏳ Falta Captura'} · ${alphaRdy ? '✅ Equipo Completo' : '⏳ Sin confirmar'}`;
-
-      pillBeta.className = 'ready-pill' + (betaComplete ? ' done' : '');
-      pillBeta.textContent = `🛡️ Beta: ${betaCap ? '📸 Captura OK' : '⏳ Falta Captura'} · ${betaRdy ? '✅ Equipo Completo' : '⏳ Sin confirmar'}`;
+      pillsBox.innerHTML = activeTeams.map(tKey => {
+        const capOk = !!state.teamHasChallenge[tKey];
+        const rdyOk = !!state.teamReady[tKey];
+        const complete = capOk && rdyOk;
+        const solvedByThisTeam = state.challenges.filter(c => c.teamId !== tKey && Array.isArray(c.solvedByTeams) && c.solvedByTeams.includes(tKey)).length;
+        return `
+          <span class="ready-pill ${complete ? 'done' : ''}">
+            ${TEAM_SHORT[tKey]}: ${capOk ? '📸 Captura OK' : '⏳ Sin Captura'} · ${rdyOk ? '✅ Listo' : '⏳ Pendiente'}
+            ${state.matchStatus !== 'setup' ? ` · 🎯 ${solvedByThisTeam}/${neededRivals}` : ''}
+          </span>
+        `;
+      }).join('');
 
       const myTeamReady = !!state.teamReady[state.team];
       const myTeamCap = !!state.teamHasChallenge[state.team];
 
-      if (state.matchStatus === 'hunting') {
+      if (state.matchStatus === 'finished' && state.winnerTeam) {
+        bar.classList.add('hunting-live');
+        title.style.color = '#f4a261';
+        title.textContent = `🏆🎉 ¡PARTIDA FINALIZADA! ${TEAM_NAMES[state.winnerTeam] || state.winnerTeam} HA ADIVINADO LAS CAPTURAS DE TODOS LOS EQUIPOS Y GANA LA PARTIDA`;
+        sub.textContent = 'Todas las capturas han quedado desbloqueadas. Pulsa en "🔄 Nueva Ronda" para jugar otra partida en esta sala.';
+        btnReady.classList.add('hidden');
+        btnNewRound.classList.remove('hidden');
+      } else if (state.matchStatus === 'hunting') {
         bar.classList.add('hunting-live');
         title.style.color = '#80ed99';
-        title.textContent = '🔥 ¡PARTIDA EN CURSO! Ambos equipos han subido sus capturas y confirmado equipos completos';
-        sub.textContent = 'Las capturas rivales están difuminadas por seguridad. ¡Usad las 5 pistas de vuestros roles para descubrir la web y acertar antes que el otro equipo!';
+        title.textContent = `🔥 ¡PARTIDA EN CURSO (${state.maxTeams} EQUIPOS)! Todos los equipos han subido su captura`;
+        sub.textContent = `Hay que adivinar la captura de todos los demás equipos (${neededRivals} captura/s rival/es). ¡El primer equipo que complete todas gana!`;
         btnReady.classList.add('hidden');
         btnNewRound.classList.remove('hidden');
       } else {
         bar.classList.remove('hunting-live');
         title.style.color = '#f4a261';
-        title.textContent = '⏳ FASE DE PREPARACIÓN: La partida empieza cuando cada equipo haya subido su captura, rellenado los datos y confirmado equipo completo';
+        title.textContent = `⏳ FASE DE PREPARACIÓN (${state.maxTeams} EQUIPOS): La partida empieza cuando los ${state.maxTeams} equipos hayan completado su captura y confirmado equipo listo`;
         sub.textContent = myTeamCap
-          ? (myTeamReady ? '✅ Tu equipo ya está listo. Esperando a que el equipo rival termine de subir su captura y confirme...' : '⚠️ Ya subisteis captura: pulsa el botón verde para confirmar que vuestro equipo está completo.')
+          ? (myTeamReady ? `✅ Tu equipo (${TEAM_SHORT[state.team]}) ya está listo. Esperando a que el resto de los ${state.maxTeams} equipos completen su captura...` : '⚠️ Ya subisteis captura: pulsa el botón verde para confirmar que vuestro equipo está completo.')
           : '👉 Ve a "🎯 MODO ESCONDER", sube la captura de tu equipo, rellena los datos y confirma equipo listo.';
         btnReady.classList.remove('hidden');
         btnNewRound.classList.add('hidden');
@@ -1292,24 +2214,24 @@
         btn.classList.toggle('assigned-extra', !isPref && isAssigned);
       });
 
-      // 2. Lista de miembros de ambos equipos en esta sala
-      const alphaPlayers = state.players.filter(p => p.team === 'team-alpha');
-      const betaPlayers = state.players.filter(p => p.team === 'team-beta');
-      const myTeamPlayers = state.team === 'team-alpha' ? alphaPlayers : betaPlayers;
+      // 2. Lista de miembros de mi equipo y rivales en esta sala
+      const myTeamPlayers = state.players.filter(p => p.team === state.team);
+      const rivalPlayers = state.players.filter(p => p.team !== state.team);
+      const myTeamFull = TEAM_NAMES[state.team] || '⚔️ Equipo Alpha';
 
       const listEl = document.getElementById('squad-members-list');
       if (myTeamPlayers.length === 0) {
         listEl.innerHTML = `<span>Conectado en solitario (ocupas los 5 roles de tu equipo)</span>`;
       } else {
         listEl.innerHTML = `
-          <strong style="color: var(--accent);">Miembros en tu ${state.team === 'team-alpha' ? '⚔️ Equipo Alpha' : '🛡️ Equipo Beta'} (${myTeamPlayers.length}):</strong>
+          <strong style="color: var(--accent);">Miembros en tu ${myTeamFull} (${myTeamPlayers.length}):</strong>
           ${myTeamPlayers.map(p => {
             const rolesIcons = (p.assignedRoles || [p.preferredRole]).map(r => ROLE_NAMES[r].split(' ')[0]).join('');
             return `<span class="member-chip ${p.id === state.playerId ? 'me' : ''}">
               🟢 ${p.name} <span title="Roles asignados">${rolesIcons} (${(p.assignedRoles || []).length} rol/es)</span>
             </span>`;
           }).join('')}
-          <span style="color: var(--text-muted); margin-left: 8px;">| Rivales en la sala: ${state.team === 'team-alpha' ? betaPlayers.length : alphaPlayers.length}</span>
+          <span style="color: var(--text-muted); margin-left: 8px;">| Rivales en la sala: ${rivalPlayers.length}</span>
         `;
       }
 
@@ -1750,6 +2672,7 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             roomCode: state.roomCode,
+            playerId: state.playerId,
             challenge: newChallenge,
             teamReady: markTeamReady
           })
@@ -1757,7 +2680,7 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
 
         showToast(
           'hide-feedback',
-          '🎯 ¡Captura y datos guardados! La foto quedará difuminada para el equipo rival hasta que acierten.',
+          `🎯 ¡Captura y datos guardados para ${TEAM_NAMES[state.team]}! La foto quedará difuminada para los equipos rivales hasta que acierten.`,
           '#2a9d8f'
         );
         await syncRoomState();
@@ -1812,6 +2735,7 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
         secretLabel: 'Módulo Eagle',
         targetPoint: { x: 79, y: 59 },
         screenshot: canvas.toDataURL('image/jpeg', 0.8),
+        blurredScreenshot: createBlurredDataUrlFromCanvas(canvas),
         clues: {
           'decoder': 'El nombre de la misión está oculto en este código Base64: "QXBvbG8gMTE=".',
           'navigator': 'Se encuentra en la enciclopedia libre (.org) en español, bajo la ruta /wiki/ de una famosa misión espacial.',
@@ -1825,7 +2749,7 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
       await fetch('./api/?action=createChallenge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomCode: state.roomCode, challenge: demo })
+        body: JSON.stringify({ roomCode: state.roomCode, playerId: state.playerId, challenge: demo })
       }).catch(() => {});
       renderChallengesList();
       renderSelectedChallenge();
@@ -1834,27 +2758,29 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
     function renderChallengesList() {
       const listEl = document.getElementById('challenges-list');
       if (state.challenges.length === 0) {
-        listEl.innerHTML = `<p style="color: var(--text-muted);">No hay objetivos en esta sala todavía.</p>`;
+        listEl.innerHTML = `<p style="color: var(--text-muted);">No hay capturas subidas en esta sala todavía.</p>`;
         return;
       }
 
       listEl.innerHTML = state.challenges.map(ch => {
-        const isAlpha = ch.teamId === 'team-alpha';
         const isSelected = ch.id === state.selectedChallengeId;
-        const isSolved = ch.status === 'solved';
+        const isOwn = ch.teamId === state.team;
+        const isUnlockedForMe = isOwn || !!ch.solvedByMyTeam || ch.status === 'solved' || state.matchStatus === 'finished';
+        const teamShort = TEAM_SHORT[ch.teamId] || ch.teamId;
+        const solvedTeamsCount = Array.isArray(ch.solvedByTeams) ? ch.solvedByTeams.length : 0;
 
         return `
           <div class="challenge-item ${isSelected ? 'selected' : ''}" onclick="selectChallenge('${ch.id}')">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-              <span class="badge ${isAlpha ? 'alpha' : 'beta'}">
-                Escondido por ${isAlpha ? '⚔️ Alpha' : '🛡️ Beta'} (${ch.createdBy || 'Agente'})
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; gap: 6px; flex-wrap: wrap;">
+              <span class="badge ${ch.teamId === 'team-alpha' ? 'alpha' : 'beta'}">
+                Escondido por ${teamShort} (${ch.createdBy || 'Agente'})
               </span>
-              <span class="badge ${isSolved ? 'solved' : ''}">
-                ${isSolved ? '✅ Resuelto' : '🔥 Activo'}
+              <span class="badge ${isUnlockedForMe ? 'solved' : ''}">
+                ${isOwn ? '🛡️ Tu Captura' : (ch.solvedByMyTeam ? '✅ Adivinada por tu Equipo' : `🔥 Por adivinar (${solvedTeamsCount}/${Math.max(1, state.maxTeams - 1)} equipos)`)}
               </span>
             </div>
             <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">
-              Misterio #${ch.id.slice(-4)} — ${isSolved ? (ch.secretLabel || ch.pageTitle) : '¿En qué web está esta captura?'}
+              Misterio #${ch.id.slice(-4)} — ${isUnlockedForMe ? (ch.secretLabel || ch.pageTitle) : '¿En qué web está esta captura?'}
             </div>
           </div>
         `;
@@ -1892,13 +2818,13 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
       emptyBox.classList.add('hidden');
       detailBox.classList.remove('hidden');
 
-      const teamName = ch.teamId === 'team-alpha' ? '⚔️ Equipo Alpha' : '🛡️ Equipo Beta';
-      const isSolved = ch.status === 'solved';
+      const teamName = TEAM_NAMES[ch.teamId] || ch.teamId;
       const isOwnTeamChallenge = ch.teamId === state.team;
+      const isSolvedForMyTeam = !!ch.solvedByMyTeam || ch.status === 'solved' || state.matchStatus === 'finished';
 
-      document.getElementById('detail-title').textContent = isSolved
-        ? `✅ Resuelto (Foto Desbloqueada): ${ch.secretLabel || ch.pageTitle}`
-        : `🔥 Objetivo plantado por ${teamName}`;
+      document.getElementById('detail-title').textContent = isSolvedForMyTeam
+        ? `✅ Captura Desbloqueada (${teamName}): ${ch.secretLabel || ch.pageTitle}`
+        : (isOwnTeamChallenge ? `🛡️ Captura oculta por tu ${teamName}` : `🔥 Objetivo plantado por ${teamName}`);
 
       const screenshotEl = document.getElementById('detail-screenshot');
       const blurOverlayEl = document.getElementById('blur-lock-overlay');
@@ -1906,18 +2832,18 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
 
       screenshotEl.src = ch.screenshot || '';
 
-      // Si el reto no está resuelto y lo están viendo los cazadores (equipo rival), mantener la foto difuminada
-      const shouldBlur = !isSolved && (!isOwnTeamChallenge || ch.isBlurred);
+      // Si el reto no está resuelto por mi equipo y es de un equipo rival, mantener la foto difuminada
+      const shouldBlur = !isSolvedForMyTeam && (!isOwnTeamChallenge || ch.isBlurred);
       screenshotEl.classList.toggle('blurred-hunt-img', shouldBlur);
       if (blurOverlayEl) {
         blurOverlayEl.classList.toggle('hidden', !shouldBlur);
       }
 
       if (step1Label) {
-        if (isSolved) {
+        if (isSolvedForMyTeam) {
           step1Label.innerHTML = '🔓 <strong>¡Objetivo Acertado!</strong> Captura original revelada al completo:';
         } else if (isOwnTeamChallenge) {
-          step1Label.innerHTML = '🛡️ <strong>Este es el objetivo que ha escondido tu equipo</strong> (el equipo rival lo ve difuminado hasta que acierte):';
+          step1Label.innerHTML = '🛡️ <strong>Este es el objetivo que ha escondido tu equipo</strong> (los equipos rivales lo ven difuminado hasta que acierten):';
         } else {
           step1Label.innerHTML = '📸 <strong>Captura del Equipo Rival (Difuminada hasta acertar):</strong> Haz clic en la zona aproximada según el Analista Visual:';
         }
@@ -1926,14 +2852,14 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
       const cluesContainer = document.getElementById('detail-clues-container');
 
       // Si la partida aún está en fase de preparación ('setup'), no revelar las pistas rivales todavía
-      if (state.matchStatus !== 'hunting' && !isOwnTeamChallenge && !isSolved) {
+      if (state.matchStatus === 'setup' && !isOwnTeamChallenge && !isSolvedForMyTeam) {
         cluesContainer.innerHTML = `
           <div class="clue-card locked-role" style="opacity: 0.95; border-left-color: #f4a261;">
             <div class="role-header">
-              <span>⏳ ESPERANDO INICIO DE LA PARTIDA</span>
+              <span>⏳ ESPERANDO A LOS ${state.maxTeams} EQUIPOS</span>
               <span>FASE DE PREPARACIÓN</span>
             </div>
-            <div>Las pistas del objetivo rival se desbloquearán automáticamente en cuanto <strong>ambos equipos hayan subido su captura, rellenado los datos y confirmado equipos completos</strong>.</div>
+            <div>Las pistas de las capturas rivales se desbloquearán automáticamente en cuanto <strong>los ${state.maxTeams} equipos hayan subido su captura, rellenado los datos y confirmado equipos completos</strong>.</div>
           </div>
         `;
         return;
@@ -1941,13 +2867,9 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
 
       const clues = ch.clues || {};
 
-      // Mostrar las pistas de todos los roles que este jugador tiene asignados actualmente
-      const rolesToRender = state.showAllClues ? ALL_ROLES : state.assignedRoles;
-
       cluesContainer.innerHTML = ALL_ROLES.map(roleKey => {
         const isMine = state.assignedRoles.includes(roleKey);
         if (!isMine && !state.showAllClues) {
-          // Averiguar qué compañero de mi equipo tiene asignado este rol
           const teammate = state.players.find(p => p.team === state.team && (p.assignedRoles || []).includes(roleKey));
           const holderName = teammate ? teammate.name : 'otro miembro de tu equipo';
           return `
@@ -2010,6 +2932,7 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
             clickX: state.verifyPoint ? state.verifyPoint.x : null,
             clickY: state.verifyPoint ? state.verifyPoint.y : null,
             solverTeam: state.team,
+            solverPlayerId: state.playerId,
             solverName: state.playerName
           })
         });
@@ -2018,7 +2941,10 @@ Devuelve SOLO un JSON válido en español con 5 pistas (sin dar la URL literal c
           const data = await res.json();
           if (data && data.success) {
             if (data.solved) {
-              showToast('verify-feedback', `🏆 ¡CORRECTO! Se ha desbloqueado la captura original y sumáis +1 Punto para ${state.team === 'team-alpha' ? 'Equipo Alpha' : 'Equipo Beta'}.`, '#2a9d8f');
+              const msg = data.matchWon
+                ? (data.message || `🏆🎉 ¡VICTORIA! ${TEAM_NAMES[state.team]} ha adivinado las capturas de todos los equipos y GANA LA PARTIDA!`)
+                : (data.message || `🎯 ¡Captura rival adivinada! (${data.solvedCountForTeam}/${data.neededToWin} completadas para ganar).`);
+              showToast('verify-feedback', msg, '#2a9d8f');
               await syncRoomState();
               return;
             } else {
