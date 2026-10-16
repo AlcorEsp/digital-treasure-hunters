@@ -2781,8 +2781,8 @@
       } catch (e) {}
 
       const hostParts = host.split('.');
-      const mainDomain = hostParts[0] || host;
-      const tld = hostParts.slice(1).join('.') || 'org';
+      const mainDomain = hostParts.length > 2 ? hostParts[hostParts.length - 2] : (hostParts[0] || host);
+      const tld = hostParts[hostParts.length - 1] || 'org';
       const b64 = btoa(unescape(encodeURIComponent(mainDomain)));
       const years = (meta.years && meta.years.length > 0) ? meta.years.slice(0, 2).join(' / ') : 'una época histórica clave';
 
